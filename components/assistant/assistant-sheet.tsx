@@ -7,6 +7,7 @@ import { DefaultChatTransport } from "ai";
 import clsx from "clsx";
 import { ArrowUp, Sparkles, Square, X } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig, useDragControls } from "motion/react";
+import { ASK_EVENT } from "./ask-event";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { LIMITS } from "@/lib/agent/config";
 import type { AgentGame } from "@/lib/agent/game";
@@ -153,6 +154,13 @@ export function AssistantSheet() {
   const { messages, sendMessage, status, error, stop, clearError, setMessages } = useChat<BibsUIMessage>({ transport });
   const busy = status === "submitted" || status === "streaming";
 
+  // The "Ask" tab in the tab bar opens the sheet (no floating button covering page content).
+  useEffect(() => {
+    const onAsk = () => setOpen(true);
+    window.addEventListener(ASK_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_EVENT, onAsk);
+  }, []);
+
   // Lock page scroll, close on Escape, focus the composer.
   useEffect(() => {
     if (!open) return;
@@ -222,25 +230,6 @@ export function AssistantSheet() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <AnimatePresence>
-        {!open ? (
-          <motion.button
-            key="pill"
-            type="button"
-            onClick={() => setOpen(true)}
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.95 }}
-            transition={spring}
-            whileTap={{ scale: 0.96 }}
-            className="fixed right-[max(1rem,calc(50%-13rem))] bottom-[calc(80px+env(safe-area-inset-bottom))] z-40 flex items-center gap-2 rounded-[3px] bg-ink py-2.5 pr-4 pl-3 font-sans text-[14px] font-medium text-paper backdrop-blur"
-            aria-haspopup="dialog"
-          >
-            <Sparkles className="size-4 text-accent" aria-hidden />
-            Ask Bibs
-          </motion.button>
-        ) : null}
-      </AnimatePresence>
 
       <AnimatePresence>
         {open ? (
