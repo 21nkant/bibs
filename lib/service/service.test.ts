@@ -7,6 +7,7 @@ import { db, schema } from "@/lib/db";
 import {
   getGame,
   getMyGames,
+  getProfile,
   getRatingHistory,
   joinGame,
   leaveGame,
@@ -158,7 +159,7 @@ describe.skipIf(!hasDb)("service (integration)", () => {
       .where(and(eq(schema.gamePlayers.gameId, game), eq(schema.gamePlayers.status, "waitlist")));
 
     const r = await leaveGame(players[0], game);
-    expect(r).toEqual({ ok: true, promoted: { userId: waitlisted, name: expect.stringMatching(/^Test P/) } });
+    expect(r).toEqual({ ok: true, promoted: { userId: waitlisted, name: expect.stringMatching(/^Test P/) }, lateDrop: false });
 
     const spots = await db.select().from(schema.gamePlayers).where(eq(schema.gamePlayers.gameId, game));
     expect(spots.filter((s) => s.status === "joined")).toHaveLength(4);
@@ -178,9 +179,25 @@ describe.skipIf(!hasDb)("service (integration)", () => {
     expect(await joinGame(z, full)).toEqual({ ok: true, status: "waitlist", position: 2 });
 
     const r = await leaveGame(x, full);
-    expect(r).toEqual({ ok: true, promoted: { userId: z, name: "Test Z" } });
+    expect(r).toEqual({ ok: true, promoted: { userId: z, name: "Test Z" }, lateDrop: false });
     const spots = await db.select().from(schema.gamePlayers).where(eq(schema.gamePlayers.gameId, full));
     expect(spots.find((s) => s.userId === y)?.status).toBe("waitlist"); // Y keeps their place
+  });
+
+  it("leaving a joined spot within 24h of kickoff is a late drop; leaving earlier isn't", async () => {
+    const soon = await makeGame("[test] Kicks Off Soon", new Date(Date.now() + 5 * 3_600_000), 14);
+    const farOff = await makeGame("[test] Next Month", new Date(START.getTime() + 10 * 86_400_000), 14);
+    const flaky = await makeProfile("Test Flaky", 1200, 10);
+
+    expect(await joinGame(flaky, farOff)).toEqual({ ok: true, status: "joined" });
+    expect(await leaveGame(flaky, farOff)).toMatchObject({ ok: true, lateDrop: false });
+    expect((await getProfile(flaky))!.lateDrops).toBe(0);
+
+    expect(await joinGame(flaky, soon)).toEqual({ ok: true, status: "joined" });
+    expect(await leaveGame(flaky, soon)).toMatchObject({ ok: true, lateDrop: true });
+    const after = (await getProfile(flaky))!;
+    expect(after.lateDrops).toBe(1);
+    expect(after.reliability).toBeCloseTo(10 / 11);
   });
 
   it("only the organizer can lock; locking balances teams and closes the roster", async () => {

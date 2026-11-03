@@ -22,6 +22,8 @@ export type Profile = {
   level: Level;
   rating: number;
   gamesPlayed: number;
+  lateDrops: number; // joined spots dropped within 24h of kickoff
+  reliability: number | null; // gamesPlayed / (gamesPlayed + lateDrops); null with no history
 };
 
 export type Field = {
@@ -64,6 +66,7 @@ export type RosterPlayer = {
   name: string;
   position: Position;
   rating: number;
+  reliability: number | null; // see Profile.reliability
   status: "joined" | "waitlist";
   team: "A" | "B" | null;
   ratingBefore: number | null;
@@ -105,7 +108,7 @@ export type JoinResult =
   | { ok: false; error: JoinError; message: string };
 
 export type LeaveResult =
-  | { ok: true; promoted: { userId: string; name: string } | null }
+  | { ok: true; promoted: { userId: string; name: string } | null; lateDrop: boolean }
   | { ok: false; error: "not_found" | "not_in_game" | "locked"; message: string };
 
 export type LockResult =

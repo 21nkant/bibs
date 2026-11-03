@@ -11,7 +11,7 @@ const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SU
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-type P = { key: string; name: string; position: "gk" | "outfield"; level: "beginner" | "intermediate" | "advanced"; rating: number; games: number };
+type P = { key: string; name: string; position: "gk" | "outfield"; level: "beginner" | "intermediate" | "advanced"; rating: number; games: number; late?: number };
 const PLAYERS: P[] = [
   { key: "alex", name: "Alex Rivera", position: "outfield", level: "intermediate", rating: 1235, games: 12 },
   { key: "sam", name: "Sam Okafor", position: "outfield", level: "beginner", rating: 1010, games: 2 },
@@ -21,16 +21,16 @@ const PLAYERS: P[] = [
   { key: "lena", name: "Lena Park", position: "outfield", level: "advanced", rating: 1360, games: 19 },
   { key: "omar", name: "Omar Haddad", position: "outfield", level: "intermediate", rating: 1340, games: 24 },
   { key: "jess", name: "Jess Moreno", position: "outfield", level: "intermediate", rating: 1325, games: 15 },
-  { key: "tariq", name: "Tariq Brooks", position: "outfield", level: "intermediate", rating: 1310, games: 18 },
+  { key: "tariq", name: "Tariq Brooks", position: "outfield", level: "intermediate", rating: 1310, games: 18, late: 1 },
   { key: "nina", name: "Nina Rossi", position: "outfield", level: "intermediate", rating: 1150, games: 9 },
-  { key: "ben", name: "Ben Adler", position: "gk", level: "intermediate", rating: 1120, games: 11 },
+  { key: "ben", name: "Ben Adler", position: "gk", level: "intermediate", rating: 1120, games: 11, late: 2 },
   { key: "priya", name: "Priya Nair", position: "outfield", level: "intermediate", rating: 1105, games: 8 },
-  { key: "luis", name: "Luis Ortega", position: "outfield", level: "intermediate", rating: 1090, games: 14 },
+  { key: "luis", name: "Luis Ortega", position: "outfield", level: "intermediate", rating: 1090, games: 14, late: 3 },
   { key: "hana", name: "Hana Sato", position: "outfield", level: "beginner", rating: 1060, games: 6 },
-  { key: "marco", name: "Marco Bianchi", position: "outfield", level: "beginner", rating: 1045, games: 5 },
+  { key: "marco", name: "Marco Bianchi", position: "outfield", level: "beginner", rating: 1045, games: 5, late: 1 },
   { key: "zoe", name: "Zoe Williams", position: "outfield", level: "beginner", rating: 1030, games: 4 },
   { key: "ade", name: "Ade Balogun", position: "outfield", level: "intermediate", rating: 1270, games: 16 },
-  { key: "ivy", name: "Ivy Laurent", position: "outfield", level: "intermediate", rating: 1215, games: 10 },
+  { key: "ivy", name: "Ivy Laurent", position: "outfield", level: "intermediate", rating: 1215, games: 10, late: 1 },
   { key: "raf", name: "Rafael Costa", position: "outfield", level: "advanced", rating: 1460, games: 40 },
   { key: "sofia", name: "Sofia Petrova", position: "gk", level: "advanced", rating: 1440, games: 33 },
   { key: "eli", name: "Eli Turner", position: "outfield", level: "advanced", rating: 1510, games: 45 },
@@ -104,10 +104,10 @@ export async function seedDemo() {
 
   await db
     .insert(schema.profiles)
-    .values(PLAYERS.map((p) => ({ id: ids[p.key], name: p.name, position: p.position, level: p.level, rating: p.rating, gamesPlayed: p.games })))
+    .values(PLAYERS.map((p) => ({ id: ids[p.key], name: p.name, position: p.position, level: p.level, rating: p.rating, gamesPlayed: p.games, lateDrops: p.late ?? 0 })))
     .onConflictDoUpdate({
       target: schema.profiles.id,
-      set: { name: sql`excluded.name`, position: sql`excluded.position`, level: sql`excluded.level`, rating: sql`excluded.rating`, gamesPlayed: sql`excluded.games_played` },
+      set: { name: sql`excluded.name`, position: sql`excluded.position`, level: sql`excluded.level`, rating: sql`excluded.rating`, gamesPlayed: sql`excluded.games_played`, lateDrops: sql`excluded.late_drops` },
     });
 
   function field(park: RegExp, num?: string) {

@@ -67,6 +67,14 @@ export default async function MePage() {
             <p className="font-display text-xl font-medium tabular">{viewer.gamesPlayed}</p>
             <p className="text-xs text-ink-2">games played</p>
           </div>
+          <div title="Games played vs. spots dropped within 24h of kickoff">
+            <p className="font-display text-xl font-medium tabular">
+              {viewer.reliability === null ? "New" : `${Math.round(viewer.reliability * 100)}%`}
+            </p>
+            <p className="text-xs text-ink-2">
+              reliable{viewer.lateDrops > 0 ? ` · ${viewer.lateDrops} late ${viewer.lateDrops === 1 ? "drop" : "drops"}` : ""}
+            </p>
+          </div>
           {history.length > 0 ? (
             <div>
               <p className={clsx("font-display text-xl font-medium tabular", net > 0 ? "text-up" : net < 0 ? "text-down" : "")}>

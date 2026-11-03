@@ -27,6 +27,8 @@ export const profiles = pgTable("profiles", {
   level: levelEnum("level").notNull(),
   rating: integer("rating").notNull(),
   gamesPlayed: integer("games_played").notNull().default(0),
+  // Joined spots dropped within 24h of kickoff (see lib/engine/reliability.ts).
+  lateDrops: integer("late_drops").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

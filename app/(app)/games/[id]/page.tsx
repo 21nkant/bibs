@@ -10,6 +10,7 @@ import { MatchCenter } from "@/components/game/match-center";
 import { Roster } from "@/components/game/roster";
 import { SpotAction } from "@/components/game/spot-action";
 import { SpotsMeter } from "@/components/game/spots-meter";
+import { isLateDrop } from "@/lib/engine/reliability";
 import { ACCESS, firstName, formatDay, formatTimeRange, levelRange } from "@/lib/format";
 import { getGame } from "@/lib/service";
 import { getViewer } from "../../viewer";
@@ -139,6 +140,7 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
           waitlistCount={game.waitlistCount}
           minRating={game.minRating}
           maxRating={game.maxRating}
+          lateDropIfLeaving={game.viewerSpot === "joined" && isLateDrop(new Date(game.startsAt), now)}
         />
       </div>
 

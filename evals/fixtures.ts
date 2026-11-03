@@ -47,6 +47,8 @@ export const VIEWER: Profile = {
   level: "intermediate",
   rating: 1235,
   gamesPlayed: 12,
+  lateDrops: 0,
+  reliability: 1,
 };
 const VIEWER_KEY = "alex";
 
@@ -136,7 +138,7 @@ function toDetail(g: G): GameDetail {
     ...(g.wait ?? []).map((k) => ({ k, status: "waitlist" as const })),
   ].map(({ k, status }) => ({
     userId: `player-${k}`, name: PLAYERS[k].name, position: PLAYERS[k].position, rating: PLAYERS[k].rating,
-    status, team: null, ratingBefore: null, ratingAfter: null,
+    status, team: null, ratingBefore: null, ratingAfter: null, reliability: null,
   }));
   const waitIdx = (g.wait ?? []).indexOf(VIEWER_KEY);
   return {

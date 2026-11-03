@@ -19,6 +19,7 @@ type Props = {
   waitlistCount: number;
   minRating: number;
   maxRating: number;
+  lateDropIfLeaving: boolean; // joined, and kickoff is within 24h
 };
 
 type Mode =
@@ -41,7 +42,15 @@ function modeFor(p: Props): Mode | null {
       : { kind: "blocked", label: "Teams are set", sub: "The organizer locked the roster for this game." };
   }
   if (p.started) return { kind: "blocked", label: "Already kicked off", sub: "This game has started." };
-  if (p.viewerSpot === "joined") return { kind: "leave", label: "Leave game", sub: "Your spot goes to the next person on the waitlist." };
+  if (p.viewerSpot === "joined") {
+    return {
+      kind: "leave",
+      label: "Leave game",
+      sub: p.lateDropIfLeaving
+        ? "Kickoff is within 24 hours, so leaving now counts as a late drop on your reliability."
+        : "Your spot goes to the next person on the waitlist.",
+    };
+  }
   if (p.viewerSpot === "waitlist") return { kind: "leave", label: "Leave waitlist", sub: "You'll lose your place in line." };
   if (!p.viewerFits) {
     return {
@@ -96,8 +105,11 @@ export function SpotAction(props: Props) {
       } else {
         const r = await leaveGameAction(props.gameId);
         if (!r.ok) say("error", r.message);
-        else if (r.promoted) say("info", `You're out. Spot passed to ${r.promoted.name}.`);
-        else say("info", "You're out. Your spot is open again.");
+        else {
+          const late = r.lateDrop ? " Counted as a late drop." : "";
+          if (r.promoted) say("info", `You're out. Spot passed to ${r.promoted.name}.${late}`);
+          else say("info", `You're out. Your spot is open again.${late}`);
+        }
       }
     });
   }
@@ -110,7 +122,9 @@ export function SpotAction(props: Props) {
         : "Holding your spot"
       : "Leaving"
     : confirming
-      ? "Tap again to give up your spot"
+      ? props.lateDropIfLeaving
+        ? "Tap again: counts as a late drop"
+        : "Tap again to give up your spot"
       : mode.label;
 
   return (

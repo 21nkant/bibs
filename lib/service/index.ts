@@ -7,6 +7,7 @@ import { and, asc, desc, eq, gte, inArray, isNotNull, lte, ne, sql, type SQL } f
 import { db, schema, type Tx } from "@/lib/db";
 import { balanceTeams, naiveSplit } from "@/lib/engine/balance";
 import { rateGame } from "@/lib/engine/elo";
+import { isLateDrop, reliability } from "@/lib/engine/reliability";
 import {
   TIME_ZONE,
   type Borough,
@@ -54,10 +55,11 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       level: profiles.level,
       rating: profiles.rating,
       gamesPlayed: profiles.gamesPlayed,
+      lateDrops: profiles.lateDrops,
     })
     .from(profiles)
     .where(eq(profiles.id, userId));
-  return row ?? null;
+  return row ? { ...row, reliability: reliability(row.gamesPlayed, row.lateDrops) } : null;
 }
 
 // Per-game spot counts, one aggregate over game_players.
@@ -239,12 +241,14 @@ export async function getGame(viewerId: string, gameId: string): Promise<GameDet
 
 // Joined first (sign-up order), then the waitlist (sign-up order).
 async function getRoster(gameId: string): Promise<RosterPlayer[]> {
-  return db
+  const rows = await db
     .select({
       userId: gp.userId,
       name: profiles.name,
       position: profiles.position,
       rating: profiles.rating,
+      gamesPlayed: profiles.gamesPlayed,
+      lateDrops: profiles.lateDrops,
       status: gp.status,
       team: gp.team,
       ratingBefore: gp.ratingBefore,
@@ -254,6 +258,7 @@ async function getRoster(gameId: string): Promise<RosterPlayer[]> {
     .innerJoin(profiles, eq(profiles.id, gp.userId))
     .where(eq(gp.gameId, gameId))
     .orderBy(sql`case when ${gp.status} = 'joined' then 0 else 1 end`, asc(gp.joinedAt), asc(gp.userId));
+  return rows.map(({ gamesPlayed, lateDrops, ...p }) => ({ ...p, reliability: reliability(gamesPlayed, lateDrops) }));
 }
 
 // Upcoming games the user is joined to or waitlisted for, soonest first.
@@ -454,14 +459,20 @@ export async function leaveGame(userId: string, gameId: string): Promise<LeaveRe
       .where(and(eq(gp.gameId, gameId), eq(gp.userId, userId)))
       .returning({ status: gp.status });
     if (!spot) return fail("not_in_game", "You're not signed up for this game.");
-    if (spot.status !== "joined") return { ok: true, promoted: null };
+    if (spot.status !== "joined") return { ok: true, promoted: null, lateDrop: false };
+
+    // Dropping a joined spot inside 24h of kickoff counts against reliability (same transaction).
+    const lateDrop = isLateDrop(game.startsAt, new Date());
+    if (lateDrop) {
+      await tx.update(profiles).set({ lateDrops: sql`${profiles.lateDrops} + 1` }).where(eq(profiles.id, userId));
+    }
 
     // A joined spot opened up: the earliest waitlisted player takes it, if the game has room.
     const [{ joined }] = await tx
       .select({ joined: sql<number>`count(*)::int` })
       .from(gp)
       .where(and(eq(gp.gameId, gameId), eq(gp.status, "joined")));
-    if (joined >= game.capacity) return { ok: true, promoted: null };
+    if (joined >= game.capacity) return { ok: true, promoted: null, lateDrop };
 
     // Promotion re-checks the join rules: the first waitlisted player who still fits the rating range
     // and isn't now playing another game at the same time. Anyone skipped keeps their waitlist place.
@@ -478,13 +489,13 @@ export async function leaveGame(userId: string, gameId: string): Promise<LeaveRe
       next = w;
       break;
     }
-    if (!next) return { ok: true, promoted: null };
+    if (!next) return { ok: true, promoted: null, lateDrop };
 
     await tx
       .update(gp)
       .set({ status: "joined" })
       .where(and(eq(gp.gameId, gameId), eq(gp.userId, next.userId)));
-    return { ok: true, promoted: { userId: next.userId, name: next.name } };
+    return { ok: true, promoted: { userId: next.userId, name: next.name }, lateDrop };
   });
 }
 

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/lib/db";
+import { reliability } from "@/lib/engine/reliability";
 import type { Profile } from "@/lib/types";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -29,5 +30,7 @@ export async function requireProfile(): Promise<Profile> {
     level: row.level,
     rating: row.rating,
     gamesPlayed: row.gamesPlayed,
+    lateDrops: row.lateDrops,
+    reliability: reliability(row.gamesPlayed, row.lateDrops),
   };
 }

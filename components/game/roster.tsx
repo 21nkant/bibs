@@ -20,6 +20,14 @@ function Row({ p, lead, isViewer }: { p: RosterPlayer; lead: string; isViewer: b
         {isViewer ? <span className="ml-1.5 text-xs font-semibold text-accent">You</span> : null}
       </span>
       {p.position === "gk" ? <GkBadge /> : null}
+      {p.reliability !== null ? (
+        <span
+          title="Reliability: games played vs. spots dropped within 24h of kickoff"
+          className={clsx("font-mono text-[11px] tabular", p.reliability < 0.9 ? "text-down" : "text-ink-3")}
+        >
+          {Math.round(p.reliability * 100)}%
+        </span>
+      ) : null}
       <span className="w-11 text-right font-mono text-sm font-semibold tabular">{p.rating}</span>
     </li>
   );
