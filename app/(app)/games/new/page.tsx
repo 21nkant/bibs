@@ -13,10 +13,12 @@ export default async function NewGamePage() {
 
   return (
     <div className="pt-4">
-      <Link href="/" className="inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink">
+      <Link href="/" className="flex w-fit items-center gap-1 text-sm text-ink-2 hover:text-ink">
         <ChevronLeft className="size-4" aria-hidden /> Games
       </Link>
-      <p className="mt-6 eyebrow">Organize</p>
+      <p className="mt-6">
+        <span className="eyebrow">Organize</span>
+      </p>
       <h1 className="mt-2 font-display text-3xl font-medium tracking-[-0.02em]">Post a game</h1>
       <p className="mt-2 text-[15px] text-ink-2">
         Pick a real NYC Parks field and a rating range. When it fills, you lock it and Bibs balances the teams.

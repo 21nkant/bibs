@@ -86,15 +86,17 @@ export async function seedDemo() {
   const ids = await ensureUsers();
   const demoIds = Object.values(ids);
 
-  await db.delete(schema.gamePlayers);
-  await db.delete(schema.games);
-  await db.delete(schema.agentUsage).where(inArray(schema.agentUsage.userId, demoIds));
-
   // @bibs.test is our reserved demo domain: accounts on it that aren't demo players (QA runs) go.
   const { data: all } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const strays = all.users.filter((u) => u.email?.endsWith("@bibs.test") && !demoIds.includes(u.id)).map((u) => u.id);
+  const demoDomain = [...demoIds, ...strays];
+
+  // Reset only what the demo owns: games organized by demo accounts (their spots cascade) and
+  // demo accounts' spots anywhere. Games real users posted, and their spots in them, are kept.
+  await db.delete(schema.games).where(inArray(schema.games.organizerId, demoDomain));
+  await db.delete(schema.gamePlayers).where(inArray(schema.gamePlayers.userId, demoDomain));
+  await db.delete(schema.agentUsage).where(inArray(schema.agentUsage.userId, demoDomain));
   if (strays.length) {
-    await db.delete(schema.agentUsage).where(inArray(schema.agentUsage.userId, strays));
     await db.delete(schema.profiles).where(inArray(schema.profiles.id, strays));
     for (const id of strays) await admin.auth.admin.deleteUser(id);
   }
