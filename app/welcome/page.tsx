@@ -64,8 +64,8 @@ export default async function WelcomePage() {
             Pickup soccer that&rsquo;s actually <em className="text-accent">fair</em>.
           </h1>
           <p className="mx-auto mt-6 max-w-[46ch] text-[1.05rem] leading-relaxed text-ink-2 sm:text-[1.2rem]">
-            Find a game on a real NYC field tonight. When it fills, Bibs splits the teams by rating, so nobody gets
-            steamrolled.
+            Find a game on a real NYC field tonight. When it fills, Bibs splits the teams by rating, so every game is
+            fair.
           </p>
           <div id="try" className="mt-9 scroll-mt-24">
             {cta}
@@ -83,7 +83,7 @@ export default async function WelcomePage() {
         <Reveal className="mx-auto mt-14 max-w-[760px] text-left sm:mt-20" delay={0.15}>
           <ShuffleHero />
           <p className="mt-4 text-center font-mono text-[11px] tracking-[0.08em] text-ink-3">
-            Sign-up order would have been a blowout. Bibs reshuffles by rating before kickoff.
+            Same fourteen players. Bibs balances the teams by rating before kickoff.
           </p>
         </Reveal>
       </section>
