@@ -1,0 +1,90 @@
+import { CalendarX } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { GameCard } from "@/components/game/game-card";
+import { getMyGames } from "@/lib/service";
+import type { GameSummary } from "@/lib/types";
+import { getViewer } from "../viewer";
+
+export const metadata: Metadata = { title: "My games" };
+
+function Group({ title, games, now, empty }: { title: string; games: GameSummary[]; now: Date; empty: React.ReactNode }) {
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 flex items-baseline justify-between text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+        {title}
+        <span className="font-display tabular text-chalk/80">{games.length}</span>
+      </h2>
+      {games.length === 0 ? (
+        empty
+      ) : (
+        <ul className="space-y-3">
+          {games.map((g) => (
+            <li key={g.id}>
+              <GameCard game={g} now={now} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+export default async function MyGamesPage() {
+  const viewer = await getViewer();
+  const games = await getMyGames(viewer.id);
+  const now = new Date();
+  const upcoming = games.filter((g) => g.viewerSpot === "joined");
+  const waitlist = games.filter((g) => g.viewerSpot === "waitlist");
+
+  return (
+    <>
+      <header className="pt-4">
+        <p className="text-sm text-muted">Where you&rsquo;re playing</p>
+        <h1 className="mt-0.5 font-display text-3xl font-extrabold tracking-tight">My games</h1>
+      </header>
+
+      {games.length === 0 ? (
+        <div className="mt-8 flex flex-col items-center rounded-2xl border border-dashed border-night-line px-6 py-14 text-center">
+          <CalendarX className="size-7 text-muted" aria-hidden />
+          <p className="mt-3 font-display text-lg font-bold">Nothing on the calendar</p>
+          <p className="mt-1 max-w-[16rem] text-sm text-muted">
+            There&rsquo;s usually a game tonight somewhere in the city. Grab a spot before it fills.
+          </p>
+          <Link href="/" className="mt-5 rounded-full bg-bib px-5 py-2.5 font-display text-sm font-bold text-night">
+            Find a game
+          </Link>
+        </div>
+      ) : (
+        <>
+          <Group
+            title="Upcoming"
+            games={upcoming}
+            now={now}
+            empty={
+              <p className="rounded-2xl border border-dashed border-night-line px-4 py-6 text-center text-sm text-muted">
+                No confirmed spots yet.{" "}
+                <Link href="/" className="font-medium text-chalk underline underline-offset-4">
+                  Find a game
+                </Link>
+              </p>
+            }
+          />
+          {waitlist.length > 0 ? (
+            <Group
+              title="Waitlist"
+              games={waitlist}
+              now={now}
+              empty={null}
+            />
+          ) : null}
+          {waitlist.length > 0 ? (
+            <p className="mt-3 px-1 text-xs leading-relaxed text-muted">
+              When someone drops, the next person in line gets the spot automatically. It&rsquo;ll move to Upcoming.
+            </p>
+          ) : null}
+        </>
+      )}
+    </>
+  );
+}

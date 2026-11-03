@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Bibs: a floodlit night pitch. Dark only. */
+@theme {
+  --color-night: #0b1020;
+  --color-night-raised: #141a2e;
+  --color-night-line: #232b45;
+  --color-chalk: #f2f3ee;
+  --color-muted: #8a93a8;
+  --color-bib: #ff5a1f;
+  --color-floodlight: #fff4d6;
+  --color-up: #3ddc97;
+  --color-down: #ff4d6d;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-night);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-night);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-bib) 45%, transparent);
+  color: var(--color-chalk);
+}
+
+/* Bib mesh: the faint perforated texture of a training bib. */
+@utility bg-mesh {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-chalk) 5%, transparent) 0.8px,
+    transparent 1.2px
+  );
+  background-size: 7px 7px;
+}
+
+/* Floodlight wash from above the pitch. */
+@utility bg-floodlight-glow {
+  background:
+    radial-gradient(55% 60% at 50% -12%, color-mix(in oklab, var(--color-floodlight) 14%, transparent), transparent 70%),
+    radial-gradient(30% 40% at 6% -8%, color-mix(in oklab, var(--color-floodlight) 8%, transparent), transparent 70%),
+    radial-gradient(30% 40% at 94% -8%, color-mix(in oklab, var(--color-floodlight) 8%, transparent), transparent 70%);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
