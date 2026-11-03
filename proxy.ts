@@ -29,6 +29,12 @@ export async function proxy(request: NextRequest) {
   if (!data?.claims && !isPublic) {
     return NextResponse.redirect(new URL("/welcome", request.url));
   }
+  // Already signed in: the log-in and sign-up forms have nothing to do.
+  // (requireProfile sends profile-less accounts to /signup?step=profile, so let that through.)
+  const finishingProfile = request.nextUrl.searchParams.get("step") === "profile";
+  if (data?.claims && (path === "/login" || (path === "/signup" && !finishingProfile))) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
   return response;
 }
 

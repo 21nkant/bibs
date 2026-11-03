@@ -166,6 +166,23 @@ describe.skipIf(!hasDb)("service (integration)", () => {
     expect(await leaveGame(players[0], game)).toMatchObject({ ok: false, error: "not_in_game" });
   });
 
+  it("waitlist promotion skips a player who is now playing an overlapping game (found in live QA)", async () => {
+    const later = new Date(START.getTime() + 5 * 86_400_000);
+    const full = await makeGame("[test] One Spot", later, 1);
+    const clashing = await makeGame("[test] Same Time", new Date(later.getTime() + 30 * 60_000), 14);
+    const [x, y, z] = [await makeProfile("Test X", 1200, 10), await makeProfile("Test Y", 1200, 10), await makeProfile("Test Z", 1200, 10)];
+
+    expect(await joinGame(x, full)).toEqual({ ok: true, status: "joined" });
+    expect(await joinGame(y, full)).toEqual({ ok: true, status: "waitlist", position: 1 });
+    expect(await joinGame(y, clashing)).toEqual({ ok: true, status: "joined" }); // allowed: Y is only waitlisted in `full`
+    expect(await joinGame(z, full)).toEqual({ ok: true, status: "waitlist", position: 2 });
+
+    const r = await leaveGame(x, full);
+    expect(r).toEqual({ ok: true, promoted: { userId: z, name: "Test Z" } });
+    const spots = await db.select().from(schema.gamePlayers).where(eq(schema.gamePlayers.gameId, full));
+    expect(spots.find((s) => s.userId === y)?.status).toBe("waitlist"); // Y keeps their place
+  });
+
   it("only the organizer can lock; locking balances teams and closes the roster", async () => {
     expect(await lockGame(players[1], game)).toMatchObject({ ok: false, error: "not_organizer" });
     expect(await submitResult(org, game, 1, 0)).toMatchObject({ ok: false, error: "not_locked" });

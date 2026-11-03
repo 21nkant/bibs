@@ -27,6 +27,7 @@ export type AgentGame = {
   viewerFits: boolean;
   viewerSpot: GameSummary["viewerSpot"];
   viewerWaitlistPosition: number | null;
+  viewerClash: string | null; // title of the viewer's overlapping game, cleaned
 };
 
 // User-written text (titles): collapse whitespace/control characters and cap the length. It is still
@@ -66,6 +67,7 @@ export function toAgentGame(g: GameSummary): AgentGame {
     viewerFits: g.viewerFits,
     viewerSpot: g.viewerSpot,
     viewerWaitlistPosition: g.viewerWaitlistPosition,
+    viewerClash: g.viewerClash ? cleanText(g.viewerClash) : null,
   };
 }
 
@@ -91,5 +93,6 @@ export function holdEligibility(g: AgentGame, now: Date): { canHold: boolean; jo
   if (g.viewerSpot === "joined") return no("You're already playing in this game.");
   if (g.viewerSpot === "waitlist") return no(`You're already on the waitlist (#${g.viewerWaitlistPosition ?? "?"}).`);
   if (!g.viewerFits) return no(`Your rating is outside this game's range (${g.minRating}–${g.maxRating}).`);
+  if (g.viewerClash) return no(`You're already playing "${g.viewerClash}" at the same time.`);
   return { canHold: true, joinsWaitlist: g.spotsLeft === 0, reason: null };
 }

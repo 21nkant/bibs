@@ -55,6 +55,8 @@ export type GameSummary = {
   viewerFits: boolean; // viewer's rating is inside [minRating, maxRating]
   viewerSpot: "joined" | "waitlist" | null;
   viewerWaitlistPosition: number | null; // 1-based
+  // Title of another game the viewer is JOINED in that overlaps this one (they couldn't join this one).
+  viewerClash: string | null;
 };
 
 export type RosterPlayer = {

@@ -90,6 +90,15 @@ export async function seedDemo() {
   await db.delete(schema.games);
   await db.delete(schema.agentUsage).where(inArray(schema.agentUsage.userId, demoIds));
 
+  // @bibs.test is our reserved demo domain: accounts on it that aren't demo players (QA runs) go.
+  const { data: all } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const strays = all.users.filter((u) => u.email?.endsWith("@bibs.test") && !demoIds.includes(u.id)).map((u) => u.id);
+  if (strays.length) {
+    await db.delete(schema.agentUsage).where(inArray(schema.agentUsage.userId, strays));
+    await db.delete(schema.profiles).where(inArray(schema.profiles.id, strays));
+    for (const id of strays) await admin.auth.admin.deleteUser(id);
+  }
+
   const fieldRows = await fetchFields();
   await db.insert(schema.fields).values(fieldRows).onConflictDoNothing();
 
@@ -165,6 +174,23 @@ export async function seedDemo() {
 
   const rating = Object.fromEntries(PLAYERS.map((p) => [p.key, p.rating]));
 
+  // Walk the played games newest → oldest so each player's history is one continuous trail that
+  // ends at their current rating (winners gained ~12, losers dropped ~12).
+  const trail = { ...rating };
+  const history = new Map<G, Record<string, { before: number; after: number }>>();
+  for (const g of GAMES.filter((g) => g.played).sort((a, b) => b.start.getTime() - a.start.getTime())) {
+    const p = g.played!;
+    const rec: Record<string, { before: number; after: number }> = {};
+    for (const [team, keys] of [["A", p.a], ["B", p.b]] as const) {
+      for (const k of keys) {
+        const won = (team === "A") === p.scoreA > p.scoreB;
+        rec[k] = { after: trail[k], before: trail[k] + (won ? -12 : 12) };
+        trail[k] = rec[k].before;
+      }
+    }
+    history.set(g, rec);
+  }
+
   for (const g of GAMES) {
     const [row] = await db.insert(schema.games).values({
       title: g.title, fieldId: g.field, organizerId: ids[g.org], startsAt: g.start, minRating: g.min, maxRating: g.max,
@@ -178,14 +204,12 @@ export async function seedDemo() {
       ...(g.wait ?? []).map((k, i) => ({ k, status: "waitlist" as const, team: null, i: 100 + i })),
     ];
     if (g.played) {
-      // Rough history trail: the winners gained ~12, the losers dropped ~12 (current ratings are "after").
-      const aWon = g.played.scoreA > g.played.scoreB;
+      const rec = history.get(g)!;
       for (const [team, keys] of [["A", g.played.a], ["B", g.played.b]] as const) {
         for (const [i, k] of keys.entries()) {
-          const won = (team === "A") === aWon;
           await db.insert(schema.gamePlayers).values({
             gameId: row.id, userId: ids[k], status: "joined", team, joinedAt: new Date(t0 + i * 60_000),
-            ratingBefore: rating[k] + (won ? -12 : 12), ratingAfter: rating[k],
+            ratingBefore: rec[k].before, ratingAfter: rec[k].after,
           });
         }
       }

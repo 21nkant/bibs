@@ -123,6 +123,14 @@ async function querySummaries(
       waitlistCount: sql<number>`coalesce(${counts.waitlistCount}, 0)`.mapWith(Number),
       viewerStatus: spots.status,
       viewerPosition: spots.position,
+      // Same overlap rule as joinGame: a joined spot in another open/locked game at the same time.
+      viewerClash: sql<string | null>`(
+        select g2.title from game_players gp2 join games g2 on g2.id = gp2.game_id
+        where gp2.user_id = ${viewer?.id ?? NO_VIEWER} and gp2.status = 'joined'
+          and g2.status in ('open', 'locked') and g2.id <> ${games.id}
+          and g2.starts_at < ${gameEnd}
+          and g2.starts_at + g2.duration_min * interval '1 minute' > ${games.startsAt}
+        order by g2.starts_at limit 1)`,
     })
     .from(games)
     .innerJoin(fields, eq(fields.id, games.fieldId))
@@ -157,6 +165,7 @@ async function querySummaries(
     viewerFits: viewer !== null && viewer.rating >= r.minRating && viewer.rating <= r.maxRating,
     viewerSpot: r.viewerStatus ?? null,
     viewerWaitlistPosition: r.viewerStatus === "waitlist" ? (r.viewerPosition ?? null) : null,
+    viewerClash: r.viewerStatus === "joined" ? null : (r.viewerClash ?? null),
   }));
 }
 
@@ -376,24 +385,7 @@ export async function joinGame(userId: string, gameId: string): Promise<JoinResu
       );
     }
 
-    // Already JOINED (not waitlisted) in another open/locked game whose time window overlaps this one.
-    const thisEnd = new Date(game.startsAt.getTime() + game.durationMin * 60_000);
-    const [clash] = await tx
-      .select({ title: games.title, startsAt: games.startsAt })
-      .from(gp)
-      .innerJoin(games, eq(games.id, gp.gameId))
-      .where(
-        and(
-          eq(gp.userId, userId),
-          eq(gp.status, "joined"),
-          inArray(games.status, ["open", "locked"]),
-          ne(games.id, gameId),
-          sql`${games.startsAt} < ${ts(thisEnd)}`,
-          sql`${gameEnd} > ${ts(game.startsAt)}`,
-        ),
-      )
-      .orderBy(asc(games.startsAt))
-      .limit(1);
+    const clash = await findClash(tx, userId, { id: gameId, startsAt: game.startsAt, durationMin: game.durationMin });
     if (clash) {
       return fail(
         "overlap",
@@ -415,6 +407,29 @@ export async function joinGame(userId: string, gameId: string): Promise<JoinResu
     await tx.insert(gp).values({ gameId, userId, status, joinedAt: sql`clock_timestamp()` });
     return status === "joined" ? { ok: true, status: "joined" } : { ok: true, status: "waitlist", position: waitlist + 1 };
   });
+}
+
+// The player's JOINED (not waitlisted) spot in another open/locked game whose time window overlaps
+// this one, if any. Used by joinGame and by waitlist promotion, so both enforce the same rule.
+async function findClash(tx: Tx, userId: string, game: { id: string; startsAt: Date; durationMin: number }) {
+  const thisEnd = new Date(game.startsAt.getTime() + game.durationMin * 60_000);
+  const [clash] = await tx
+    .select({ title: games.title, startsAt: games.startsAt })
+    .from(gp)
+    .innerJoin(games, eq(games.id, gp.gameId))
+    .where(
+      and(
+        eq(gp.userId, userId),
+        eq(gp.status, "joined"),
+        inArray(games.status, ["open", "locked"]),
+        ne(games.id, game.id),
+        sql`${games.startsAt} < ${ts(thisEnd)}`,
+        sql`${gameEnd} > ${ts(game.startsAt)}`,
+      ),
+    )
+    .orderBy(asc(games.startsAt))
+    .limit(1);
+  return clash ?? null;
 }
 
 export async function leaveGame(userId: string, gameId: string): Promise<LeaveResult> {
@@ -448,13 +463,21 @@ export async function leaveGame(userId: string, gameId: string): Promise<LeaveRe
       .where(and(eq(gp.gameId, gameId), eq(gp.status, "joined")));
     if (joined >= game.capacity) return { ok: true, promoted: null };
 
-    const [next] = await tx
-      .select({ userId: gp.userId, name: profiles.name })
+    // Promotion re-checks the join rules: the first waitlisted player who still fits the rating range
+    // and isn't now playing another game at the same time. Anyone skipped keeps their waitlist place.
+    const waitlist = await tx
+      .select({ userId: gp.userId, name: profiles.name, rating: profiles.rating })
       .from(gp)
       .innerJoin(profiles, eq(profiles.id, gp.userId))
       .where(and(eq(gp.gameId, gameId), eq(gp.status, "waitlist")))
-      .orderBy(asc(gp.joinedAt), asc(gp.userId))
-      .limit(1);
+      .orderBy(asc(gp.joinedAt), asc(gp.userId));
+    let next: { userId: string; name: string } | null = null;
+    for (const w of waitlist) {
+      if (w.rating < game.minRating || w.rating > game.maxRating) continue;
+      if (await findClash(tx, w.userId, { id: gameId, startsAt: game.startsAt, durationMin: game.durationMin })) continue;
+      next = w;
+      break;
+    }
     if (!next) return { ok: true, promoted: null };
 
     await tx

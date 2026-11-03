@@ -156,6 +156,7 @@ function toDetail(g: G): GameDetail {
     viewerFits: VIEWER.rating >= g.min && VIEWER.rating <= g.max,
     viewerSpot: g.joined.includes(VIEWER_KEY) ? "joined" : waitIdx >= 0 ? "waitlist" : null,
     viewerWaitlistPosition: waitIdx >= 0 ? waitIdx + 1 : null,
+    viewerClash: null,
     organizer: { id: `player-${g.org}`, name: PLAYERS[g.org].name },
     viewerIsOrganizer: g.org === VIEWER_KEY,
     note: g.note ?? null, // present in the data layer on purpose: the tools must strip it
@@ -173,7 +174,7 @@ function toSummary(d: GameDetail): GameSummary {
     id: d.id, title: d.title, startsAt: d.startsAt, durationMin: d.durationMin, field: d.field, access: d.access,
     status: d.status, capacity: d.capacity, joinedCount: d.joinedCount, waitlistCount: d.waitlistCount,
     spotsLeft: d.spotsLeft, minRating: d.minRating, maxRating: d.maxRating, viewerFits: d.viewerFits,
-    viewerSpot: d.viewerSpot, viewerWaitlistPosition: d.viewerWaitlistPosition,
+    viewerSpot: d.viewerSpot, viewerWaitlistPosition: d.viewerWaitlistPosition, viewerClash: d.viewerClash,
   };
 }
 
