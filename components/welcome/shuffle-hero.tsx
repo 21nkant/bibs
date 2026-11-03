@@ -26,6 +26,10 @@ const PLAYERS: P[] = [
   { id: "mb", ini: "MB", rating: 1045 },
 ];
 const byId = new Map(PLAYERS.map((p) => [p.id, p]));
+const NAMES: Record<string, string> = {
+  mc: "Maya", km: "Kofi", lp: "Lena", oh: "Omar", jm: "Jess", tb: "Tariq", ab: "Ade",
+  ar: "Alex", ba: "Ben", pn: "Priya", lo: "Luis", nr: "Nina", hs: "Hana", mb: "Marco",
+};
 
 // Left-half formation (x%, y%) on a landscape pitch: keeper, two back, three middle, one up top.
 const GK_SLOT = [6.5, 50] as const;
@@ -89,7 +93,7 @@ const SPLITS = choose(PLAYERS.length, Math.floor(PLAYERS.length / 2)) / 2;
 // Steps: 0 sign-up order · 1 search · 2..n+1 one swap each · n+2 balanced.
 const SEARCH = 1;
 const BALANCED = SWAPS.length + 2;
-const HOLD_MS = (step: number) => (step === 0 ? 2600 : step === SEARCH ? 2000 : step === BALANCED ? 4200 : 800);
+const HOLD_MS = (step: number) => (step === 0 ? 4000 : step === SEARCH ? 2800 : step === BALANCED ? 5000 : 1400);
 const swapsDone = (step: number) => Math.max(0, Math.min(SWAPS.length, step - 1));
 
 export function ShuffleHero() {
@@ -127,31 +131,39 @@ export function ShuffleHero() {
     shown === 0 ? "Sign-up order" : shown === BALANCED ? "Balanced" : shown === SEARCH ? "Searching" : "Balancing";
   const labelTone = shown === 0 ? "text-down" : shown === BALANCED ? "text-up" : "text-on-dark";
 
+  // Plain-English narration, one sentence per step.
+  const pct = (p: number) => Math.round(p * 100);
+  const who = (p: P) => `${NAMES[p.id]} (${p.rating})`;
   let status: React.ReactNode;
   if (shown === 0) {
-    status = <span>First 7 to sign up vs the rest</span>;
+    status = (
+      <>
+        14 players signed up. Split by sign-up order, the Bibs team wins{" "}
+        <b className="text-accent">{pct(PROBS[0])}%</b> of the time.
+      </>
+    );
   } else if (shown === SEARCH) {
     status = (
       <span className="tabular">
-        Checking split {checked.toLocaleString("en-US")} of {SPLITS.toLocaleString("en-US")}
-        <span className={checked > SPLITS * 0.4 ? "text-up" : "opacity-0"}> · ✓ one keeper each side</span>
+        Bibs checks every way to split them: <b>{checked.toLocaleString("en-US")}</b> of {SPLITS.toLocaleString("en-US")}, one
+        goalkeeper per side.
       </span>
     );
   } else if (current) {
     status = (
-      <span>
-        Swap {done} of {SWAPS.length}: {current[0].gk ? "GK" : current[0].ini} {current[0].rating} ⇄{" "}
-        {current[1].gk ? "GK" : current[1].ini} {current[1].rating}
-      </span>
+      <>
+        Swap {done} of {SWAPS.length}: <b>{who(current[0])}</b> ⇄ <b>{who(current[1])}</b>
+      </>
     );
   } else {
     status = (
       <span className="tabular">
-        Team averages {AVG_A.toLocaleString("en-US")} vs {AVG_B.toLocaleString("en-US")}
-        <span className="text-up"> · ✓ closest of {SPLITS.toLocaleString("en-US")}</span>
+        <b className="text-up">{pct(PROBS.at(-1)!)} / {100 - pct(PROBS.at(-1)!)}.</b> A fair game. Team averages{" "}
+        {AVG_A.toLocaleString("en-US")} vs {AVG_B.toLocaleString("en-US")}.
       </span>
     );
   }
+  const stepNo = shown === 0 ? 1 : shown === SEARCH ? 2 : shown === BALANCED ? 4 : 3;
 
   return (
     <figure className="surface-dark relative overflow-hidden rounded-xl border border-line">
@@ -223,10 +235,28 @@ export function ShuffleHero() {
           })}
         </div>
 
-        <p className="mt-4 h-4 truncate font-mono text-[11px] tracking-[0.04em] text-ink-2" aria-live="polite">
-          {status}
-        </p>
-        <WinBar probA={PROBS[done]} className="mt-3" />
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10px] tracking-[0.06em] text-ink-3">
+          <span className="flex items-center gap-1.5">
+            <i className="size-2.5 rounded-full bg-accent" /> Bibs team
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i className="size-2.5 rounded-full border border-on-dark-2" /> No-bibs team
+          </span>
+          <span>number = player rating</span>
+        </div>
+
+        <div className="mt-4 flex items-start gap-3">
+          <span className="mt-1 flex shrink-0 gap-1" aria-label={`Step ${stepNo} of 4`}>
+            {[1, 2, 3, 4].map((n) => (
+              <i key={n} className={`h-1.5 w-4 rounded-full ${n <= stepNo ? "bg-accent" : "bg-line-strong"}`} />
+            ))}
+          </span>
+          <p className="min-h-[2.75rem] text-[14px] leading-snug text-ink sm:text-[15px]" aria-live="polite">
+            {status}
+          </p>
+        </div>
+        <p className="mt-3 eyebrow-plain text-ink-3">Chance to win</p>
+        <WinBar probA={PROBS[done]} className="mt-1.5" />
       </div>
     </figure>
   );
