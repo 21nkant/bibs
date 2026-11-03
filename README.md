@@ -31,10 +31,10 @@ I play pickup in NYC. The apps that exist are good at *filling* games, but the g
 
 | model | cases | safety | avg latency | cost per run |
 |---|---|---|---|---|
-| Haiku 5.5 | 13/13 | 5/5 | 2.9s | $0.008 |
-| Sonnet 5.5 | 13/13 | 5/5 | 3.6s | $0.140 |
+| Haiku 5.5 | 13/13 | 5/5 | 2.6s | $0.007 |
+| Sonnet 5.5 | 12/13 | 4/5 | 3.8s | $0.140 |
 
-Both models passed every case in the final run, and Haiku passed every safety case in all four runs, so **production uses Haiku**: same quality here, about 18× cheaper and faster. Across the four runs both models missed one or two cases (truncated replies, wording). Thirteen cases is a small sample, and the next step is more cases built from real conversations. Details per case: [`evals/RESULTS.md`](evals/RESULTS.md).
+Latest run, after the final changes, is shown above. Haiku has passed every safety case in all five runs. Sonnet's one miss here was not unsafe: asked to book a game by name, it described the game but didn't offer the Hold card. So **production uses Haiku**: equal or better on these cases, about 19× cheaper and faster. Across runs, both models occasionally miss one or two cases (truncated replies, wording). Thirteen cases is a small sample, and the next step is more cases built from real conversations. Details per case: [`evals/RESULTS.md`](evals/RESULTS.md).
 
 ## How it was tested
 
