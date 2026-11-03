@@ -9,7 +9,7 @@ export type BannerMessage = { tone: BannerTone; text: string; id: number };
 
 const TONE = {
   success: { icon: CircleCheck, className: "border-up/30 bg-up/10 text-up" },
-  info: { icon: Info, className: "border-floodlight/25 bg-floodlight/[0.07] text-floodlight" },
+  info: { icon: Info, className: "border-accent/25 bg-accent/[0.07] text-accent" },
   error: { icon: CircleAlert, className: "border-down/30 bg-down/10 text-down" },
 } as const;
 
@@ -34,7 +34,7 @@ export function Banner({ message, className }: { message: BannerMessage | null; 
               const Icon = TONE[message.tone].icon;
               return <Icon className="mt-px size-[18px] shrink-0" aria-hidden />;
             })()}
-            <span className="text-chalk/90">{message.text}</span>
+            <span className="text-ink/90">{message.text}</span>
           </motion.div>
         ) : null}
       </AnimatePresence>

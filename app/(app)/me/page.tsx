@@ -25,8 +25,8 @@ function Sparkline({ history }: { history: Entry[] }) {
   const [lx, ly] = xy[xy.length - 1];
   return (
     <svg viewBox={`-2 -2 ${w + 4} ${h + 4}`} className="h-12 w-full overflow-visible" aria-hidden preserveAspectRatio="none">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} vectorEffect="non-scaling-stroke" className="text-chalk/50" />
-      <circle cx={lx} cy={ly} r={2.2} className="fill-bib" vectorEffect="non-scaling-stroke" />
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.5} vectorEffect="non-scaling-stroke" className="text-ink/50" />
+      <circle cx={lx} cy={ly} r={2.2} className="fill-accent" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -40,39 +40,39 @@ export default async function MePage() {
   return (
     <>
       <header className="flex items-center gap-3 pt-4">
-        <span className="grid size-12 place-items-center rounded-full border border-night-line bg-night-raised font-display text-base font-bold">
+        <span className="grid size-12 place-items-center rounded-full border border-line bg-card font-display text-base font-medium">
           {initials(viewer.name)}
         </span>
         <div className="min-w-0">
-          <h1 className="truncate font-display text-2xl font-extrabold tracking-tight">{viewer.name}</h1>
-          <p className="text-sm text-muted">
+          <h1 className="truncate font-display text-2xl font-medium tracking-[-0.02em]">{viewer.name}</h1>
+          <p className="text-sm text-ink-2">
             {POSITION_LABEL[viewer.position]} · Signed up as {LEVEL_LABEL[viewer.level].toLowerCase()}
           </p>
         </div>
       </header>
 
-      <section className="relative mt-6 overflow-hidden rounded-3xl border border-night-line bg-night-raised/80 p-5">
-        <div aria-hidden className="absolute inset-x-0 -top-1/2 h-full bg-floodlight-glow opacity-70" />
+      <section className="relative mt-6 overflow-hidden rounded-xl border border-line bg-card/80 p-5">
+        <div aria-hidden className="absolute inset-x-0 -top-1/2 h-full opacity-70" />
         <div className="relative flex items-start justify-between">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Rating</p>
+          <p className="eyebrow-plain">Rating</p>
           {provisional ? (
-            <span className="rounded-full border border-floodlight/25 bg-floodlight/10 px-2.5 py-0.5 text-[11px] font-semibold text-floodlight">
+            <span className="rounded-full border border-accent/25 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">
               Provisional
             </span>
           ) : null}
         </div>
-        <p className="relative mt-1 font-display text-7xl font-extrabold leading-none tracking-tight tabular">{viewer.rating}</p>
+        <p className="relative mt-1 font-display text-7xl font-medium leading-none tracking-[-0.02em] tabular">{viewer.rating}</p>
         <div className="relative mt-4 flex gap-6 text-sm">
           <div>
-            <p className="font-display text-xl font-bold tabular">{viewer.gamesPlayed}</p>
-            <p className="text-xs text-muted">games played</p>
+            <p className="font-display text-xl font-medium tabular">{viewer.gamesPlayed}</p>
+            <p className="text-xs text-ink-2">games played</p>
           </div>
           {history.length > 0 ? (
             <div>
-              <p className={clsx("font-display text-xl font-bold tabular", net > 0 ? "text-up" : net < 0 ? "text-down" : "")}>
+              <p className={clsx("font-display text-xl font-medium tabular", net > 0 ? "text-up" : net < 0 ? "text-down" : "")}>
                 {signed(net)}
               </p>
-              <p className="text-xs text-muted">last {history.length} {history.length === 1 ? "game" : "games"}</p>
+              <p className="text-xs text-ink-2">last {history.length} {history.length === 1 ? "game" : "games"}</p>
             </div>
           ) : null}
         </div>
@@ -82,42 +82,42 @@ export default async function MePage() {
           </div>
         ) : null}
         {provisional ? (
-          <p className="relative mt-4 text-xs leading-relaxed text-muted">
+          <p className="relative mt-4 text-xs leading-relaxed text-ink-2">
             Provisional until you&rsquo;ve played 5 games. Each result is still teaching Bibs how you play.
           </p>
         ) : null}
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted">History</h2>
+        <h2 className="mb-3 eyebrow-plain">History</h2>
         {history.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-night-line px-4 py-8 text-center">
-            <p className="text-sm text-muted">Play a game and your rating starts moving.</p>
-            <Link href="/" className="mt-4 inline-block rounded-full bg-chalk px-4 py-2 text-sm font-semibold text-night">
+          <div className="rounded-xl border border-dashed border-line px-4 py-8 text-center">
+            <p className="text-sm text-ink-2">Play a game and your rating starts moving.</p>
+            <Link href="/" className="mt-4 inline-block rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper">
               Find a game
             </Link>
           </div>
         ) : (
-          <ul className="divide-y divide-night-line overflow-hidden rounded-2xl border border-night-line bg-night-raised/60">
+          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-card/60">
             {history.map((h) => {
               const d = h.after - h.before;
               return (
                 <li key={h.gameId}>
-                  <Link href={`/games/${h.gameId}`} className="flex items-center gap-3 px-4 py-3 transition hover:bg-night-raised">
+                  <Link href={`/games/${h.gameId}`} className="flex items-center gap-3 px-4 py-3 transition hover:bg-card">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{h.title}</p>
-                      <p className="text-xs text-muted">
+                      <p className="text-xs text-ink-2">
                         {formatShortDate(h.startsAt)} ·{" "}
                         {h.won === null ? "Draw" : h.won ? <span className="text-up">Won</span> : <span className="text-down">Lost</span>}
                       </p>
                     </div>
-                    <span className="font-display text-xs text-muted tabular">
-                      {h.before} → <span className="text-chalk">{h.after}</span>
+                    <span className="font-mono text-xs text-ink-2 tabular">
+                      {h.before} → <span className="text-ink">{h.after}</span>
                     </span>
                     <span
                       className={clsx(
-                        "w-14 text-right font-display text-sm font-bold tabular",
-                        d > 0 ? "text-up" : d < 0 ? "text-down" : "text-muted",
+                        "w-14 text-right font-mono text-sm font-medium tabular",
+                        d > 0 ? "text-up" : d < 0 ? "text-down" : "text-ink-2",
                       )}
                     >
                       {d > 0 ? "▲ " : d < 0 ? "▼ " : ""}
@@ -134,7 +134,7 @@ export default async function MePage() {
       <form action={logOut} className="mt-10">
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-night-line px-5 py-3.5 text-sm font-semibold text-chalk/80 transition hover:border-down/40 hover:text-down"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-line px-5 py-3.5 text-sm font-semibold text-ink/80 transition hover:border-down/40 hover:text-down"
         >
           <LogOut className="size-4" aria-hidden />
           Log out

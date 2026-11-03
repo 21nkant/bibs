@@ -17,7 +17,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-night-line bg-night/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
     >
       <ul className="mx-auto grid max-w-md grid-cols-3">
         {TABS.map(({ href, label, icon: Icon, match }) => {
@@ -28,18 +28,18 @@ export function TabBar() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={clsx(
-                  "relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold tracking-wide transition-colors",
-                  active ? "text-chalk" : "text-muted hover:text-chalk/80",
+                  "relative flex h-16 flex-col items-center justify-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] transition-colors",
+                  active ? "text-ink" : "text-ink-3 hover:text-ink-2",
                 )}
               >
                 {active && (
                   <motion.span
                     layoutId="tab-indicator"
-                    className="absolute inset-x-8 top-0 h-0.5 rounded-full bg-bib shadow-[0_0_14px_2px_rgba(255,90,31,0.45)]"
+                    className="absolute inset-x-10 -top-px h-px bg-accent"
                     transition={{ type: "spring", stiffness: 500, damping: 40 }}
                   />
                 )}
-                <Icon className={clsx("size-[22px]", active && "text-bib")} strokeWidth={active ? 2.2 : 1.8} aria-hidden />
+                <Icon className="size-5" strokeWidth={1.6} aria-hidden />
                 {label}
               </Link>
             </li>

@@ -72,8 +72,8 @@ export function TeamBoard({
               exit={{ y: -14, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className={clsx(
-                "absolute inset-0 text-xs font-semibold uppercase tracking-[0.16em]",
-                phase === "naive" ? "text-muted" : "text-up",
+                "absolute inset-0 eyebrow-plain",
+                phase === "naive" ? "text-ink-2" : "text-up",
               )}
             >
               {phase === "naive" ? "Sign-up order" : "Balanced by rating"}
@@ -84,7 +84,7 @@ export function TeamBoard({
           <button
             type="button"
             onClick={onReplay}
-            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-muted transition hover:bg-night-line/60 hover:text-chalk"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-ink-2 transition hover:bg-line/60 hover:text-ink"
           >
             <RotateCcw className="size-3.5" aria-hidden />
             Replay
@@ -100,16 +100,16 @@ export function TeamBoard({
             <div
               key={t}
               className={clsx(
-                "rounded-2xl border p-2",
-                t === "A" ? "border-bib/25 bg-bib/[0.06]" : "border-chalk/15 bg-chalk/[0.03]",
+                "rounded-xl border p-2",
+                t === "A" ? "border-accent/25 bg-accent/[0.06]" : "border-ink/15 bg-ink/[0.03]",
               )}
             >
               <div className="flex items-baseline justify-between px-1.5 pb-2 pt-1">
-                <span className={clsx("font-display text-sm font-bold", t === "A" ? "text-bib" : "text-chalk")}>
+                <span className={clsx("font-mono text-sm font-medium", t === "A" ? "text-accent" : "text-ink")}>
                   {t === "A" ? "Bibs" : "No bibs"}
                 </span>
-                <span className="font-display text-xs text-muted tabular">
-                  avg <AnimatedNumber value={avg(teams[t])} className="text-chalk/90" />
+                <span className="font-mono text-xs text-ink-2 tabular">
+                  avg <AnimatedNumber value={avg(teams[t])} className="text-ink/90" />
                 </span>
               </div>
               <ul className="space-y-1">
@@ -121,14 +121,14 @@ export function TeamBoard({
                     transition={{ layout: { type: "spring", stiffness: 170, damping: 22, delay: i * 0.03 } }}
                     className={clsx(
                       "flex items-center gap-2 rounded-lg px-1.5 py-1.5",
-                      p.userId === viewerId && "bg-chalk/[0.07] ring-1 ring-chalk/15",
+                      p.userId === viewerId && "bg-ink/[0.07] ring-1 ring-ink/15",
                     )}
                   >
                     <motion.span
                       initial={false}
                       animate={{
-                        backgroundColor: t === "A" ? "#ff5a1f" : "rgba(0,0,0,0)",
-                        borderColor: t === "A" ? "#ff5a1f" : "rgba(242,243,238,0.65)",
+                        backgroundColor: t === "A" ? "var(--color-accent)" : "rgba(0, 0, 0, 0)",
+                        borderColor: t === "A" ? "var(--color-accent)" : "var(--color-ink-2)",
                       }}
                       className="size-2.5 shrink-0 rounded-full border"
                     />
@@ -136,9 +136,9 @@ export function TeamBoard({
                       {p.userId === viewerId ? "You" : shortName(p.name)}
                     </span>
                     {p.position === "gk" ? (
-                      <span className="font-display text-[9px] font-bold tracking-wider text-floodlight">GK</span>
+                      <span className="font-mono text-[9px] font-medium tracking-wider text-accent">GK</span>
                     ) : null}
-                    <span className="font-display text-xs text-chalk/70 tabular">{p.rating}</span>
+                    <span className="font-mono text-xs text-ink/70 tabular">{p.rating}</span>
                   </motion.li>
                 ))}
               </ul>
@@ -148,9 +148,9 @@ export function TeamBoard({
       </LayoutGroup>
 
       {phase === "balanced" && naiveWinProbA !== null && balancedWinProbA !== null ? (
-        <p className="mt-3 text-xs leading-relaxed text-muted">
+        <p className="mt-3 text-xs leading-relaxed text-ink-2">
           Splitting by sign-up order would have been{" "}
-          <span className="font-display text-chalk/90 tabular">
+          <span className="font-display text-ink/90 tabular">
             {percent(naiveWinProbA)}/{100 - percent(naiveWinProbA)}
           </span>
           . Now it&rsquo;s{" "}

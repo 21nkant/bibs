@@ -12,6 +12,7 @@ type Props = {
   status: GameStatus;
   started: boolean;
   viewerSpot: "joined" | "waitlist" | null;
+  viewerWaitlistPosition: number | null;
   viewerFits: boolean;
   viewerRating: number;
   spotsLeft: number;
@@ -30,8 +31,13 @@ function modeFor(p: Props): Mode | null {
   if (p.status === "cancelled") return { kind: "blocked", label: "Game cancelled", sub: "The organizer called this one off." };
   if (p.status === "locked") {
     // A locked player's team is on the board; only outsiders need to hear why they can't join.
-    return p.viewerSpot === "joined"
-      ? null
+    if (p.viewerSpot === "joined") return null;
+    return p.viewerSpot === "waitlist"
+      ? {
+          kind: "blocked",
+          label: "Teams are set",
+          sub: `You were on the waitlist (#${p.viewerWaitlistPosition ?? "?"}), and the organizer locked the roster.`,
+        }
       : { kind: "blocked", label: "Teams are set", sub: "The organizer locked the roster for this game." };
   }
   if (p.started) return { kind: "blocked", label: "Already kicked off", sub: "This game has started." };
@@ -58,6 +64,7 @@ export function SpotAction(props: Props) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<BannerMessage | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const armedAt = useRef(0);
   const seq = useRef(0);
   const mode = modeFor(props);
 
@@ -73,7 +80,9 @@ export function SpotAction(props: Props) {
 
   function run() {
     if (!mode || mode.kind === "blocked") return;
-    if (mode.kind === "leave" && !confirming) {
+    if (mode.kind === "leave" && (!confirming || Date.now() - armedAt.current < 400)) {
+      // A double-tap must not count as the confirming second tap.
+      if (!confirming) armedAt.current = Date.now();
       setConfirming(true);
       return;
     }
@@ -112,21 +121,21 @@ export function SpotAction(props: Props) {
         disabled={blocked || pending}
         aria-busy={pending || undefined}
         className={clsx(
-          "flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 font-display text-base font-bold transition active:scale-[0.99]",
+          "flex w-full items-center justify-center gap-2 rounded-[3px] border px-5 py-3.5 text-[15px] font-medium transition",
           mode.kind === "join" &&
-            "bg-bib text-night shadow-[0_12px_40px_-14px_rgba(255,90,31,0.8)] hover:brightness-110 disabled:opacity-70",
+            "border-ink bg-ink text-paper hover:opacity-90 disabled:opacity-70",
           mode.kind === "leave" &&
             (confirming
-              ? "border border-down/60 bg-down/15 text-down"
-              : "border border-night-line bg-night-raised text-chalk hover:border-chalk/30"),
-          blocked && "cursor-not-allowed border border-night-line bg-night-raised/60 text-chalk/60",
+              ? "border-down/60 bg-down/10 text-down"
+              : "border-line-strong bg-transparent text-ink hover:border-ink"),
+          blocked && "cursor-not-allowed border-line bg-card text-ink-3",
           pending && "cursor-wait",
         )}
       >
         {pending ? <LoaderCircle className="size-5 animate-spin" aria-hidden /> : null}
         {label}
       </button>
-      <p className="text-center text-xs text-muted">{mode.sub}</p>
+      <p className="text-center text-xs text-ink-2">{mode.sub}</p>
       <Banner message={message} />
     </div>
   );

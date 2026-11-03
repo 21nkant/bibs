@@ -87,7 +87,7 @@ export function StepTrail({ parts }: { parts: ToolPart[] }) {
             key={part.toolCallId}
             className={clsx(
               "flex items-start gap-2 text-[12px] leading-5",
-              failed ? "text-down" : running ? "text-chalk/70" : "text-muted",
+              failed ? "text-down" : running ? "text-ink/70" : "text-ink-2",
             )}
           >
             <span className="mt-[3px] shrink-0">
@@ -97,14 +97,14 @@ export function StepTrail({ parts }: { parts: ToolPart[] }) {
               {label}
               {result ? (
                 <>
-                  <span className="text-muted/70"> → </span>
-                  <span className="font-medium text-chalk/85">{result}</span>
+                  <span className="text-ink-2/70"> → </span>
+                  <span className="font-medium text-ink/85">{result}</span>
                   <Check className="ml-1 inline size-3 text-up" aria-hidden />
                 </>
               ) : failed ? (
                 <span> · {part.state === "output-error" ? "couldn't complete" : "skipped"}</span>
               ) : (
-                <span className="text-muted/70">…</span>
+                <span className="text-ink-2/70">…</span>
               )}
             </span>
           </li>

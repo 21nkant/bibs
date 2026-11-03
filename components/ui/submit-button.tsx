@@ -17,7 +17,7 @@ export function PrimaryButton({
       disabled={pending || rest.disabled}
       aria-busy={pending || undefined}
       className={clsx(
-        "flex w-full items-center justify-center gap-2 rounded-2xl bg-bib px-5 py-4 font-display text-base font-bold text-night shadow-[0_10px_40px_-14px_rgba(255,90,31,0.75)] transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none",
+        "flex w-full items-center justify-center gap-2 rounded-[3px] border border-ink bg-ink px-5 py-3.5 text-[15px] font-medium text-paper transition hover:-translate-y-px hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0",
         pending && "cursor-wait",
         className,
       )}

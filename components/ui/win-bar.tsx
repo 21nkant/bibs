@@ -19,28 +19,28 @@ export function WinBar({
   const a = Math.round(probA * 100);
   return (
     <div className={clsx("w-full", className)}>
-      <div className="flex items-baseline justify-between font-display text-sm tabular">
+      <div className="flex items-baseline justify-between font-mono text-sm tabular">
         <span className="flex items-baseline gap-1.5">
-          <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted">{labelA}</span>
-          <span className="font-bold text-bib">
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-ink-2">{labelA}</span>
+          <span className="font-bold text-accent">
             <AnimatedNumber value={a} />%
           </span>
         </span>
         <span className="flex items-baseline gap-1.5">
-          <span className="font-bold text-chalk">
+          <span className="font-bold text-ink">
             <AnimatedNumber value={100 - a} />%
           </span>
-          <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted">{labelB}</span>
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-ink-2">{labelB}</span>
         </span>
       </div>
       <div className="relative mt-2 flex h-2 gap-[3px] overflow-hidden rounded-full">
         <motion.div
-          className="h-full rounded-l-full bg-bib"
+          className="h-full rounded-l-full bg-accent"
           initial={false}
           animate={{ width: `${a}%` }}
           transition={{ type: "spring", stiffness: 70, damping: 18 }}
         />
-        <div className="h-full flex-1 rounded-r-full bg-chalk/85" />
+        <div className="h-full flex-1 rounded-r-full bg-ink/85" />
       </div>
     </div>
   );

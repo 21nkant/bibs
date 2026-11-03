@@ -54,18 +54,18 @@ function TryButton({
       value={who}
       disabled={pending}
       className={clsx(
-        "group flex items-center justify-between gap-3 rounded-2xl px-5 text-left transition active:scale-[0.99] disabled:cursor-wait",
+        "group flex items-center justify-between gap-3 rounded-[3px] border px-5 text-left transition hover:-translate-y-px disabled:cursor-wait",
         compact ? "py-3" : "py-4",
         primary
-          ? "bg-bib text-night shadow-[0_10px_40px_-12px_rgba(255,90,31,0.7)] hover:brightness-110"
-          : "border border-night-line bg-night-raised text-chalk hover:border-chalk/30",
+          ? "border-ink bg-ink text-paper hover:opacity-90"
+          : "border-line-strong bg-transparent text-ink hover:border-ink",
         pending && !mine && "opacity-50",
       )}
     >
       <span className="min-w-0">
-        <span className="block font-display text-base font-bold">{title}</span>
+        <span className="block text-[15px] font-medium">{title}</span>
         {!compact && (
-          <span className={clsx("block text-sm", primary ? "text-night/70" : "text-muted")}>{sub}</span>
+          <span className={clsx("block text-sm", primary ? "text-paper/65" : "text-ink-3")}>{sub}</span>
         )}
       </span>
       {mine ? (

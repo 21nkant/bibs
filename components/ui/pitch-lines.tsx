@@ -43,12 +43,12 @@ export function PitchLines({ className, strokeWidth = 1 }: { className?: string;
 export function Backdrop() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-mesh opacity-60" />
-      <div className="absolute inset-x-0 top-0 h-[70vh] bg-floodlight-glow" />
-      <div className="absolute left-1/2 top-24 w-[min(140vw,720px)] -translate-x-1/2 text-chalk/[0.045]">
+      <div className="absolute inset-0 opacity-60" />
+      <div className="absolute inset-x-0 top-0 h-[70vh]" />
+      <div className="absolute left-1/2 top-24 w-[min(140vw,720px)] -translate-x-1/2 text-ink/[0.045]">
         <PitchLines className="aspect-[70/107] w-full" />
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-night to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-paper to-transparent" />
     </div>
   );
 }

@@ -24,22 +24,22 @@ export function SpotsMeter({
             key={i}
             className={clsx(
               "h-1.5 flex-1 rounded-full",
-              i < joined ? (viewerJoined && i === joined - 1 ? "bg-bib" : "bg-chalk/85") : "bg-night-line",
+              i < joined ? (viewerJoined && i === joined - 1 ? "bg-accent" : "bg-ink/85") : "bg-line",
             )}
           />
         ))}
       </div>
       <div className="mt-2 flex items-baseline justify-between text-xs">
-        <span className="font-display tabular text-chalk/80">
-          <span className="font-semibold text-chalk">{joined}</span>/{capacity} in
+        <span className="font-display tabular text-ink/80">
+          <span className="font-semibold text-ink">{joined}</span>/{capacity} in
         </span>
         <span className="tabular">
-          {full ? <span className="font-semibold text-bib">Full</span> : (
+          {full ? <span className="font-semibold text-accent">Full</span> : (
             <span className="font-semibold text-up">
               {left} {left === 1 ? "spot" : "spots"} left
             </span>
           )}
-          {waitlist > 0 ? <span className="text-muted"> · {waitlist} on waitlist</span> : null}
+          {waitlist > 0 ? <span className="text-ink-2"> · {waitlist} on waitlist</span> : null}
         </span>
       </div>
     </div>

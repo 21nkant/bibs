@@ -9,7 +9,7 @@ export default async function SignedInLayout({ children }: LayoutProps<"/">) {
     <>
       <Backdrop />
       {/* Bottom padding clears the tab bar and the floating "Ask Bibs" button. */}
-      <div className="mx-auto w-full max-w-md px-4 pb-40 pt-[max(1rem,env(safe-area-inset-top))]">{children}</div>
+      <div className="mx-auto w-full max-w-md px-4 pb-48 pt-[max(1rem,env(safe-area-inset-top))]">{children}</div>
       <AssistantSheet />
       <TabBar />
     </>

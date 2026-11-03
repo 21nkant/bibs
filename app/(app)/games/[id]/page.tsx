@@ -26,7 +26,8 @@ const load = cache(async (id: string) => {
 
 export async function generateMetadata({ params }: PageProps<"/games/[id]">): Promise<Metadata> {
   const data = await load((await params).id);
-  return { title: data?.game.title ?? "Game" };
+  if (!data) notFound();
+  return { title: data.game.title };
 }
 
 export default async function GamePage({ params }: PageProps<"/games/[id]">) {
@@ -44,7 +45,7 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
       <nav className="flex items-center justify-between pt-1">
         <Link
           href="/"
-          className="-ml-2 inline-flex items-center gap-0.5 rounded-full py-1.5 pl-1 pr-3 text-sm font-medium text-chalk/80 transition hover:bg-night-raised hover:text-chalk"
+          className="-ml-2 inline-flex items-center gap-0.5 rounded-full py-1.5 pl-1 pr-3 text-sm font-medium text-ink/80 transition hover:bg-card hover:text-ink"
         >
           <ChevronLeft className="size-5" aria-hidden />
           Games
@@ -53,21 +54,21 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
       </nav>
 
       <header className="mt-5">
-        <p className="font-display text-sm font-bold uppercase tracking-[0.1em]">
-          <span className={day === "Tonight" || day === "Today" ? "text-bib" : "text-chalk"}>{day}</span>
-          <span className="text-muted"> · </span>
-          <span className="text-chalk/85 tabular">{formatTimeRange(game.startsAt, game.durationMin)}</span>
+        <p className="font-mono text-sm font-medium uppercase tracking-[0.1em]">
+          <span className={day === "Tonight" || day === "Today" ? "text-accent" : "text-ink"}>{day}</span>
+          <span className="text-ink-2"> · </span>
+          <span className="text-ink/85 tabular">{formatTimeRange(game.startsAt, game.durationMin)}</span>
         </p>
-        <h1 className="mt-1.5 font-display text-[2rem] font-extrabold leading-[1.05] tracking-tight text-balance">
+        <h1 className="mt-1.5 font-display text-[2rem] font-medium leading-[1.05] tracking-[-0.02em] text-balance">
           {game.title}
         </h1>
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-chalk/75">
-          <MapPin className="size-4 shrink-0 text-muted" aria-hidden />
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-ink/75">
+          <MapPin className="size-4 shrink-0 text-ink-2" aria-hidden />
           <span className="truncate">{fieldLine(game.field)}</span>
         </p>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+        <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-2">
           {game.field.lit ? (
-            <span className="inline-flex items-center gap-1 text-floodlight">
+            <span className="inline-flex items-center gap-1 text-accent">
               <Lightbulb className="size-3.5" aria-hidden /> Floodlit
             </span>
           ) : (
@@ -80,15 +81,15 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
         </p>
       </header>
 
-      <dl className="mt-6 divide-y divide-night-line overflow-hidden rounded-2xl border border-night-line bg-night-raised/80">
+      <dl className="mt-6 divide-y divide-line overflow-hidden rounded-xl border border-line bg-card/80">
         <div className="px-4 py-3.5">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{ACCESS[game.access].label}</dt>
-          <dd className="mt-1 text-sm text-chalk/85">{ACCESS[game.access].explain}</dd>
+          <dt className="eyebrow-plain">{ACCESS[game.access].label}</dt>
+          <dd className="mt-1 text-sm text-ink/85">{ACCESS[game.access].explain}</dd>
         </div>
         <div className="flex items-center justify-between gap-4 px-4 py-3.5">
           <div>
-            <dt className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Level</dt>
-            <dd className="mt-1 font-display text-lg font-bold tabular">{levelRange(game.minRating, game.maxRating)}</dd>
+            <dt className="eyebrow-plain">Level</dt>
+            <dd className="mt-1 font-display text-lg font-medium tabular">{levelRange(game.minRating, game.maxRating)}</dd>
           </div>
           <dd
             className={clsx(
@@ -131,6 +132,7 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
           status={game.status}
           started={new Date(game.startsAt).getTime() <= now.getTime()}
           viewerSpot={game.viewerSpot}
+          viewerWaitlistPosition={game.viewerWaitlistPosition}
           viewerFits={game.viewerFits}
           viewerRating={viewer.rating}
           spotsLeft={game.spotsLeft}
@@ -141,10 +143,10 @@ export default async function GamePage({ params }: PageProps<"/games/[id]">) {
       </div>
 
       {game.note ? (
-        <figure className="mt-8 rounded-2xl border border-night-line bg-night-raised/50 p-4">
-          <Quote className="size-4 text-bib" aria-hidden />
-          <blockquote className="mt-2 whitespace-pre-line text-sm leading-relaxed text-chalk/85">{game.note}</blockquote>
-          <figcaption className="mt-2 text-xs text-muted">
+        <figure className="mt-8 rounded-xl border border-line bg-card/50 p-4">
+          <Quote className="size-4 text-accent" aria-hidden />
+          <blockquote className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink/85">{game.note}</blockquote>
+          <figcaption className="mt-2 text-xs text-ink-2">
             {game.viewerIsOrganizer ? "Your note" : `From ${firstName(game.organizer.name)}, the organizer`}
           </figcaption>
         </figure>

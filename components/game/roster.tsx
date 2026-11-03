@@ -8,19 +8,19 @@ function Row({ p, lead, isViewer }: { p: RosterPlayer; lead: string; isViewer: b
     <li
       className={clsx(
         "flex items-center gap-3 rounded-xl px-3 py-2.5",
-        isViewer ? "bg-bib/[0.08] ring-1 ring-bib/30" : "odd:bg-night-raised/50",
+        isViewer ? "bg-accent/[0.08] ring-1 ring-accent/30" : "odd:bg-card/50",
       )}
     >
-      <span className="w-6 text-right font-display text-xs text-muted tabular">{lead}</span>
-      <span className="grid size-8 shrink-0 place-items-center rounded-full border border-night-line bg-night font-display text-[11px] font-bold text-chalk/85">
+      <span className="w-6 text-right font-mono text-xs text-ink-2 tabular">{lead}</span>
+      <span className="grid size-8 shrink-0 place-items-center rounded-full border border-line bg-paper font-mono text-[11px] font-medium text-ink/85">
         {initials(p.name)}
       </span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">
         {p.name}
-        {isViewer ? <span className="ml-1.5 text-xs font-semibold text-bib">You</span> : null}
+        {isViewer ? <span className="ml-1.5 text-xs font-semibold text-accent">You</span> : null}
       </span>
       {p.position === "gk" ? <GkBadge /> : null}
-      <span className="w-11 text-right font-display text-sm font-semibold tabular">{p.rating}</span>
+      <span className="w-11 text-right font-mono text-sm font-semibold tabular">{p.rating}</span>
     </li>
   );
 }
@@ -42,14 +42,14 @@ export function Roster({
   return (
     <>
       <section className="mt-8">
-        <h2 className="mb-3 flex items-baseline justify-between text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+        <h2 className="mb-3 flex items-baseline justify-between eyebrow-plain">
           Who&rsquo;s in
-          <span className="font-display tabular text-chalk/80">
+          <span className="font-display tabular text-ink/80">
             {joined.length}/{capacity}
           </span>
         </h2>
         {joined.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-night-line px-4 py-6 text-center text-sm text-muted">
+          <p className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-sm text-ink-2">
             Nobody yet. First one in sets the tone.
           </p>
         ) : (
@@ -62,9 +62,9 @@ export function Roster({
       </section>
       {waitlist.length > 0 ? (
         <section className="mt-8">
-          <h2 className="mb-3 flex items-baseline justify-between text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+          <h2 className="mb-3 flex items-baseline justify-between eyebrow-plain">
             Waitlist
-            <span className="font-display tabular text-chalk/80">{waitlist.length}</span>
+            <span className="font-display tabular text-ink/80">{waitlist.length}</span>
           </h2>
           <ul className="space-y-1">
             {waitlist.map((p, i) => (

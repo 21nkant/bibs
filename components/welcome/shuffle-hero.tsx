@@ -67,7 +67,16 @@ export function ShuffleHero() {
   const pos = LAYOUTS[shown];
 
   return (
-    <figure className="relative rounded-3xl border border-night-line bg-night-raised/70 p-4 shadow-[0_30px_80px_-40px_rgba(255,244,214,0.18)]">
+    <figure className="surface-dark relative overflow-hidden rounded-xl border border-line">
+      <div className="flex h-10 items-center gap-2 border-b border-line bg-card px-4">
+        <span className="flex gap-1.5" aria-hidden>
+          <i className="size-2.5 rounded-full bg-line-strong" />
+          <i className="size-2.5 rounded-full bg-line-strong" />
+          <i className="size-2.5 rounded-full bg-line-strong" />
+        </span>
+        <span className="ml-2 font-mono text-[11px] tracking-[0.08em] text-ink-3">Tuesday Night 7v7 · lock &amp; balance</span>
+      </div>
+      <div className="p-4 sm:p-6">
       <figcaption className="flex items-center justify-between">
         <div className="relative h-5 flex-1 overflow-hidden">
           <AnimatePresence mode="popLayout" initial={false}>
@@ -77,31 +86,30 @@ export function ShuffleHero() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -14, opacity: 0 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-0 text-xs font-semibold uppercase tracking-[0.16em]"
+              className="absolute inset-0 eyebrow-plain"
             >
               {shown === "naive" ? (
-                <span className="text-muted">Sign-up order</span>
+                <span className="text-ink-2">Sign-up order</span>
               ) : (
                 <span className="text-up">Balanced by Bibs</span>
               )}
             </motion.span>
           </AnimatePresence>
         </div>
-        <span className="text-xs text-muted">7 v 7 · McCarren Park</span>
+        <span className="font-mono text-[11px] text-ink-3">7v7 · McCarren Park</span>
       </figcaption>
 
-      <div className="relative mt-3 aspect-[107/70] overflow-hidden rounded-2xl border border-chalk/15 bg-[#0e1529]">
+      <div className="relative mt-3 aspect-[107/70] overflow-hidden rounded-xl border border-ink/15 bg-paper">
         {/* mowing stripes */}
         <div
           aria-hidden
           className="absolute inset-0 opacity-100"
           style={{
             backgroundImage:
-              "repeating-linear-gradient(90deg, rgba(242,243,238,0.025) 0 10%, transparent 10% 20%)",
+              "repeating-linear-gradient(90deg, color-mix(in oklab, var(--color-ink) 3%, transparent) 0 10%, transparent 10% 20%)",
           }}
         />
-        <div aria-hidden className="absolute inset-x-0 -top-1/2 h-full bg-floodlight-glow opacity-80" />
-        <LandscapeLines />
+                <LandscapeLines />
         {PLAYERS.map((p, i) => {
           const s = pos.get(p.id)!;
           return (
@@ -116,22 +124,23 @@ export function ShuffleHero() {
               <motion.span
                 initial={false}
                 animate={{
-                  backgroundColor: s.a ? "#ff5a1f" : "#141a2e",
-                  color: s.a ? "#0b1020" : "#f2f3ee",
-                  borderColor: s.a ? "#ff5a1f" : "rgba(242,243,238,0.7)",
+                  backgroundColor: s.a ? "var(--color-accent)" : "var(--color-dark-raised)",
+                  color: s.a ? "var(--color-dark)" : "var(--color-on-dark)",
+                  borderColor: s.a ? "var(--color-accent)" : "var(--color-on-dark-2)",
                 }}
                 transition={{ duration: 0.4, delay: i * 0.035 + 0.15 }}
-                className="grid size-7 place-items-center rounded-full border font-display text-[10px] font-bold sm:size-8"
+                className="grid size-7 place-items-center rounded-full border font-mono text-[10px] font-medium sm:size-8"
               >
                 {p.gk ? "GK" : p.ini}
               </motion.span>
-              <span className="mt-0.5 font-display text-[9px] font-medium text-chalk/70 tabular">{p.rating}</span>
+              <span className="mt-0.5 font-mono text-[9px] font-medium text-ink/70 tabular">{p.rating}</span>
             </motion.div>
           );
         })}
       </div>
 
-      <WinBar probA={ODDS[shown]} className="mt-4" />
+      <WinBar probA={ODDS[shown]} className="mt-5" />
+      </div>
     </figure>
   );
 }
@@ -148,7 +157,7 @@ function LandscapeLines() {
       viewBox="0 0 105 68"
       preserveAspectRatio="none"
       aria-hidden
-      className="pointer-events-none absolute inset-0 size-full text-chalk/25"
+      className="pointer-events-none absolute inset-0 size-full text-ink/25"
     >
       <line x1="52.5" y1="0" x2="52.5" y2="68" {...line} />
       <ellipse cx="52.5" cy="34" rx="9.15" ry="9.15" {...line} />

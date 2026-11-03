@@ -9,9 +9,9 @@ export default function SignupPage() {
   return (
     <AuthShell title="Get a game tonight" sub="Thirty seconds, then you're looking at real fields with open spots.">
       <SignupForm />
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-ink-2">
         Already playing?{" "}
-        <Link href="/login" className="font-medium text-chalk underline-offset-4 hover:underline">
+        <Link href="/login" className="font-medium text-ink underline-offset-4 hover:underline">
           Log in
         </Link>
       </p>

@@ -70,8 +70,8 @@ export function SignupForm() {
           onChange={setLevel}
           options={LEVELS.map((l) => ({ ...l, sub: String(STARTING_RATING[l.value]) }))}
         />
-        <p className="mt-2 text-xs leading-relaxed text-muted">
-          You&rsquo;ll start at <span className="font-display font-semibold text-chalk tabular">{STARTING_RATING[level]}</span>.
+        <p className="mt-2 text-xs leading-relaxed text-ink-2">
+          You&rsquo;ll start at <span className="font-display font-semibold text-ink tabular">{STARTING_RATING[level]}</span>.
           After that your rating moves with every result, so a modest guess is fine.
         </p>
       </div>

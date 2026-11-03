@@ -31,14 +31,14 @@ function SpotsLine({ game }: { game: AgentGame }) {
 function ViewerChip({ game }: { game: AgentGame }) {
   if (game.viewerSpot === "joined") {
     return (
-      <span className="shrink-0 rounded-full bg-bib px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-wider text-night">
+      <span className="shrink-0 rounded-full bg-accent px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-paper">
         You&apos;re in
       </span>
     );
   }
   if (game.viewerSpot === "waitlist") {
     return (
-      <span className="shrink-0 rounded-full border border-bib/60 px-2.5 py-1 font-display text-[11px] font-bold uppercase tracking-wider text-bib tabular">
+      <span className="shrink-0 rounded-full border border-accent/60 px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider text-accent tabular">
         Waitlist #{game.viewerWaitlistPosition ?? "?"}
       </span>
     );
@@ -49,14 +49,14 @@ function ViewerChip({ game }: { game: AgentGame }) {
 function HoldResult({ result }: { result: JoinResult }) {
   if (result.ok && result.status === "joined") {
     return (
-      <p className="font-display text-sm font-bold text-up" role="status">
-        Joined ✓ <span className="font-sans font-normal text-chalk/70">See you on the pitch.</span>
+      <p className="font-mono text-sm font-medium text-up" role="status">
+        Joined ✓ <span className="font-sans font-normal text-ink/70">See you on the pitch.</span>
       </p>
     );
   }
   if (result.ok && result.status === "waitlist") {
     return (
-      <p className="font-display text-sm font-bold text-bib tabular" role="status">
+      <p className="font-mono text-sm font-medium text-accent tabular" role="status">
         Waitlist #{result.position}. You&apos;ll move up automatically if a spot opens.
       </p>
     );
@@ -69,6 +69,10 @@ function HoldResult({ result }: { result: JoinResult }) {
   );
 }
 
+// Hold outcomes outlive the card: closing and reopening the sheet (or a later answer showing the
+// same game) must not offer "Hold my spot" again for a game the player already holds.
+const holdsByGame = new Map<string, HoldState>();
+
 export function AssistantGameCard({
   game,
   highlighted = false,
@@ -78,7 +82,11 @@ export function AssistantGameCard({
   highlighted?: boolean; // proposed by the assistant via propose_booking
   onNavigate?: () => void;
 }) {
-  const [hold, setHold] = useState<HoldState>({ kind: "idle" });
+  const [hold, setHoldState] = useState<HoldState>(() => holdsByGame.get(game.id) ?? { kind: "idle" });
+  const setHold = (h: HoldState) => {
+    if (h.kind === "done" && h.result.ok) holdsByGame.set(game.id, h);
+    setHoldState(h);
+  };
   const eligibility = holdEligibility(game, new Date());
   const field = [game.park, game.fieldNumber ? `Field ${game.fieldNumber}` : null, game.borough].filter(Boolean).join(" · ");
 
@@ -94,31 +102,31 @@ export function AssistantGameCard({
   return (
     <article
       className={clsx(
-        "rounded-2xl border p-3.5",
-        highlighted ? "border-bib/50 bg-night-raised bg-floodlight-glow shadow-[0_0_32px_-12px_var(--color-floodlight)]" : "border-night-line bg-night-raised/80",
+        "rounded-xl border p-3.5",
+        highlighted ? "border-accent/50 bg-card" : "border-line bg-card/80",
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="font-display text-[12px] font-bold uppercase tracking-[0.08em] text-chalk/85 tabular">{game.when}</p>
+        <p className="font-display text-[12px] font-medium uppercase tracking-[0.08em] text-ink/85 tabular">{game.when}</p>
         <ViewerChip game={game} />
       </div>
-      <h4 className="mt-1 font-display text-lg font-bold leading-tight tracking-tight">
-        <Link href={`/games/${game.id}`} onClick={onNavigate} className="hover:underline decoration-chalk/30 underline-offset-4">
+      <h4 className="mt-1 font-display text-lg font-medium leading-tight tracking-[-0.02em]">
+        <Link href={`/games/${game.id}`} onClick={onNavigate} className="hover:underline decoration-ink/30 underline-offset-4">
           {game.title}
         </Link>
       </h4>
-      <p className="mt-0.5 truncate text-[13px] text-muted">{field}</p>
+      <p className="mt-0.5 truncate text-[13px] text-ink-2">{field}</p>
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
         {game.lit ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-floodlight/20 bg-floodlight/10 px-2 py-0.5 font-medium text-floodlight">
+          <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2 py-0.5 font-medium text-accent">
             <Lightbulb className="size-3" aria-hidden /> Lights
           </span>
         ) : (
-          <span className="text-muted">No lights</span>
+          <span className="text-ink-2">No lights</span>
         )}
         <SpotsLine game={game} />
-        <span className={clsx("tabular", game.viewerFits ? "text-chalk/80" : "text-down")}>
+        <span className={clsx("tabular", game.viewerFits ? "text-ink/80" : "text-down")}>
           Rating {game.minRating}–{game.maxRating}
         </span>
       </div>
@@ -133,13 +141,13 @@ export function AssistantGameCard({
             type="button"
             onClick={onHold}
             disabled={hold.kind === "pending"}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-bib font-display text-[15px] font-bold text-night transition active:scale-[0.98] disabled:opacity-70"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent font-display text-[15px] font-medium text-paper transition active:scale-[0.98] disabled:opacity-70"
           >
             {hold.kind === "pending" ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : null}
             {hold.kind === "pending" ? "Holding…" : eligibility.joinsWaitlist ? "Join the waitlist" : "Hold my spot"}
           </button>
         ) : game.viewerSpot === null && eligibility.reason ? (
-          <p className="text-[13px] text-muted">{eligibility.reason}</p>
+          <p className="text-[13px] text-ink-2">{eligibility.reason}</p>
         ) : null}
       </div>
     </article>

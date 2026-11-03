@@ -36,7 +36,7 @@ function InlineText({ text }: { text: string }) {
     <>
       {text.split(/(\*\*[^*\n]+\*\*)/g).map((chunk, i) =>
         chunk.startsWith("**") && chunk.endsWith("**") ? (
-          <strong key={i} className="font-semibold text-chalk">
+          <strong key={i} className="font-semibold text-ink">
             {chunk.slice(2, -2)}
           </strong>
         ) : (
@@ -91,7 +91,7 @@ function AssistantTurn({ message, onNavigate }: { message: BibsUIMessage; onNavi
     <div className="max-w-full">
       <StepTrail parts={toolParts} />
       {text ? (
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-chalk/90">
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink/90">
           <InlineText text={text} />
         </p>
       ) : null}
@@ -106,7 +106,7 @@ function AssistantTurn({ message, onNavigate }: { message: BibsUIMessage; onNavi
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-2 text-[13px] font-medium text-muted underline decoration-night-line underline-offset-4 hover:text-chalk"
+          className="mt-2 text-[13px] font-medium text-ink-2 underline decoration-line underline-offset-4 hover:text-ink"
         >
           {more.length} more from the search
         </button>
@@ -119,7 +119,7 @@ function UserTurn({ message }: { message: BibsUIMessage }) {
   const text = message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
   return (
     <div className="flex justify-end">
-      <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-bib/90 px-3.5 py-2 text-[15px] leading-snug text-night">
+      <p className="max-w-[85%] whitespace-pre-wrap rounded-lg rounded-br-sm bg-ink px-3.5 py-2 text-[15px] leading-snug text-paper">
         {text}
       </p>
     </div>
@@ -132,7 +132,7 @@ function Thinking() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="size-1.5 rounded-full bg-chalk/60"
+          className="size-1.5 rounded-full bg-ink/60"
           animate={{ opacity: [0.25, 1, 0.25] }}
           transition={{ duration: 1, repeat: Infinity, delay: i * 0.15 }}
         />
@@ -191,8 +191,8 @@ export function AssistantSheet() {
   if (messages.length === 0) {
     body = (
       <div className="flex h-full flex-col justify-end pb-2">
-        <p className="font-display text-2xl font-bold tracking-tight">Find a fair game.</p>
-        <p className="mt-1 text-[15px] text-muted">
+        <p className="font-display text-2xl font-medium tracking-[-0.02em]">Find a fair game.</p>
+        <p className="mt-1 text-[15px] text-ink-2">
           Ask in your own words. I&apos;ll search, show you games, and you tap to hold a spot.
         </p>
         <div className="mt-5 flex flex-col items-start gap-2">
@@ -201,7 +201,7 @@ export function AssistantSheet() {
               key={s}
               type="button"
               onClick={() => send(s)}
-              className="rounded-full border border-night-line bg-night px-3.5 py-2 text-left text-[14px] text-chalk/90 transition hover:border-chalk/25 active:scale-[0.98]"
+              className="rounded-full border border-line bg-paper px-3.5 py-2 text-left text-[14px] text-ink/90 transition hover:border-ink/25 active:scale-[0.98]"
             >
               {s}
             </button>
@@ -233,10 +233,10 @@ export function AssistantSheet() {
             exit={{ opacity: 0, y: 12, scale: 0.95 }}
             transition={spring}
             whileTap={{ scale: 0.96 }}
-            className="fixed right-4 bottom-[calc(88px+env(safe-area-inset-bottom))] z-40 flex items-center gap-2 rounded-full border border-bib/40 bg-night-raised/95 py-2.5 pr-4 pl-3 font-display text-[15px] font-bold text-chalk shadow-[0_8px_30px_-8px_rgba(255,90,31,0.55)] backdrop-blur"
+            className="fixed right-[max(1rem,calc(50%-13rem))] bottom-[calc(80px+env(safe-area-inset-bottom))] z-40 flex items-center gap-2 rounded-[3px] bg-ink py-2.5 pr-4 pl-3 font-sans text-[14px] font-medium text-paper backdrop-blur"
             aria-haspopup="dialog"
           >
-            <Sparkles className="size-4 text-bib" aria-hidden />
+            <Sparkles className="size-4 text-accent" aria-hidden />
             Ask Bibs
           </motion.button>
         ) : null}
@@ -247,7 +247,7 @@ export function AssistantSheet() {
           <>
             <motion.div
               key="backdrop"
-              className="fixed inset-0 z-40 bg-night/70 backdrop-blur-[2px]"
+              className="fixed inset-0 z-40 bg-ink/25 backdrop-blur-[2px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -259,7 +259,7 @@ export function AssistantSheet() {
               role="dialog"
               aria-modal="true"
               aria-label="Ask Bibs"
-              className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[86dvh] w-full max-w-lg flex-col rounded-t-3xl border border-b-0 border-night-line bg-night-raised font-sans shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.8)]"
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[86dvh] w-full max-w-lg flex-col rounded-t-xl border border-b-0 border-line bg-card font-sans"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -275,13 +275,13 @@ export function AssistantSheet() {
             >
               {/* Header (drag handle) */}
               <header
-                className="relative shrink-0 cursor-grab touch-none rounded-t-3xl bg-floodlight-glow px-4 pt-2.5 pb-3 active:cursor-grabbing"
+                className="relative shrink-0 cursor-grab touch-none rounded-t-xl px-4 pt-2.5 pb-3 active:cursor-grabbing"
                 onPointerDown={(e) => dragControls.start(e)}
               >
-                <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-chalk/20" aria-hidden />
+                <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-ink/20" aria-hidden />
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-2 font-display text-lg font-bold tracking-tight">
-                    <Sparkles className="size-4 text-bib" aria-hidden /> Ask Bibs
+                  <h2 className="flex items-center gap-2 font-display text-lg font-medium tracking-[-0.02em]">
+                    <Sparkles className="size-4 text-accent" aria-hidden /> Ask Bibs
                   </h2>
                   <div className="flex items-center gap-1">
                     {messages.length ? (
@@ -292,7 +292,7 @@ export function AssistantSheet() {
                           setMessages([]);
                           clearError();
                         }}
-                        className="rounded-full px-3 py-1.5 text-[13px] font-medium text-muted hover:text-chalk"
+                        className="rounded-full px-3 py-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
                       >
                         New chat
                       </button>
@@ -300,7 +300,7 @@ export function AssistantSheet() {
                     <button
                       type="button"
                       onClick={close}
-                      className="grid size-9 place-items-center rounded-full text-muted hover:bg-night hover:text-chalk"
+                      className="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-paper hover:text-ink"
                       aria-label="Close"
                     >
                       <X className="size-5" aria-hidden />
@@ -316,9 +316,9 @@ export function AssistantSheet() {
 
               {/* Error */}
               {error ? (
-                <div className="mx-4 mb-2 flex items-start justify-between gap-3 rounded-xl border border-down/30 bg-down/10 px-3 py-2 text-[13px] text-chalk/90" role="alert">
+                <div className="mx-4 mb-2 flex items-start justify-between gap-3 rounded-xl border border-down/30 bg-down/10 px-3 py-2 text-[13px] text-ink/90" role="alert">
                   <span>{error.message || "Something went wrong. Try again."}</span>
-                  <button type="button" onClick={clearError} className="shrink-0 font-medium text-muted hover:text-chalk">
+                  <button type="button" onClick={clearError} className="shrink-0 font-medium text-ink-2 hover:text-ink">
                     Dismiss
                   </button>
                 </div>
@@ -326,13 +326,13 @@ export function AssistantSheet() {
 
               {/* Composer */}
               <form
-                className="shrink-0 border-t border-night-line px-3 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+                className="shrink-0 border-t border-line px-3 pt-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
                 onSubmit={(e) => {
                   e.preventDefault();
                   send(input);
                 }}
               >
-                <div className="flex items-end gap-2 rounded-2xl border border-night-line bg-night px-3 py-2 focus-within:border-chalk/25">
+                <div className="flex items-end gap-2 rounded-xl border border-line bg-paper px-3 py-2 focus-within:border-ink/25">
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -347,13 +347,13 @@ export function AssistantSheet() {
                     maxLength={LIMITS.maxInputChars}
                     placeholder="Ask for a game, a day, a borough…"
                     aria-label="Message Ask Bibs"
-                    className="max-h-28 min-h-6 flex-1 resize-none bg-transparent py-1 text-[16px] leading-6 text-chalk outline-none placeholder:text-muted/80 [field-sizing:content]"
+                    className="max-h-28 min-h-6 flex-1 resize-none bg-transparent py-1 text-[16px] leading-6 text-ink outline-none placeholder:text-ink-2/80 [field-sizing:content]"
                   />
                   {busy ? (
                     <button
                       type="button"
                       onClick={stop}
-                      className="grid size-9 shrink-0 place-items-center rounded-full bg-chalk/10 text-chalk"
+                      className="grid size-9 shrink-0 place-items-center rounded-full bg-ink/10 text-ink"
                       aria-label="Stop"
                     >
                       <Square className="size-3.5 fill-current" aria-hidden />
@@ -362,14 +362,14 @@ export function AssistantSheet() {
                     <button
                       type="submit"
                       disabled={!input.trim()}
-                      className="grid size-9 shrink-0 place-items-center rounded-full bg-bib text-night transition active:scale-95 disabled:bg-chalk/10 disabled:text-muted"
+                      className="grid size-9 shrink-0 place-items-center rounded-[3px] bg-ink text-paper transition active:scale-95 disabled:bg-ink/10 disabled:text-ink-2"
                       aria-label="Send"
                     >
                       <ArrowUp className="size-4.5" aria-hidden />
                     </button>
                   )}
                 </div>
-                <p className={clsx("mt-1.5 px-1 text-[11px] text-muted", remaining > 80 && "invisible")} aria-live="polite">
+                <p className={clsx("mt-1.5 px-1 text-[11px] text-ink-2", remaining > 80 && "invisible")} aria-live="polite">
                   {remaining} characters left
                 </p>
               </form>

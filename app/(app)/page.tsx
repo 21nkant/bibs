@@ -35,17 +35,17 @@ export default async function GamesPage({ searchParams }: PageProps<"/">) {
     <>
       <header className="flex items-end justify-between gap-4 pt-4">
         <div>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-ink-2">
             {greeting(now)}, {firstName(viewer.name)}
           </p>
-          <h1 className="mt-0.5 font-display text-3xl font-extrabold tracking-tight">Find a game</h1>
+          <h1 className="mt-0.5 font-display text-3xl font-medium tracking-[-0.02em]">Find a game</h1>
         </div>
         <Link
           href="/me"
-          className="flex flex-col items-end rounded-2xl border border-night-line bg-night-raised/70 px-3.5 py-2 transition hover:border-chalk/25"
+          className="flex flex-col items-end rounded-xl border border-line bg-card/70 px-3.5 py-2 transition hover:border-ink/25"
         >
-          <span className="font-display text-2xl font-extrabold leading-none tabular">{viewer.rating}</span>
-          <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Your rating</span>
+          <span className="font-display text-2xl font-medium leading-none tabular">{viewer.rating}</span>
+          <span className="mt-1 eyebrow-plain">Your rating</span>
         </Link>
       </header>
 
@@ -53,7 +53,7 @@ export default async function GamesPage({ searchParams }: PageProps<"/">) {
         <FilterChips query={query} />
       </div>
 
-      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+      <p className="mt-6 eyebrow-plain">
         {games.length === 0
           ? "No games"
           : `${games.length} ${games.length === 1 ? "game" : "games"} ${
@@ -62,14 +62,14 @@ export default async function GamesPage({ searchParams }: PageProps<"/">) {
       </p>
 
       {games.length === 0 ? (
-        <div className="mt-3 flex flex-col items-center rounded-2xl border border-dashed border-night-line px-6 py-12 text-center">
-          <SearchX className="size-7 text-muted" aria-hidden />
-          <p className="mt-3 font-display text-lg font-bold">Nothing on that pitch</p>
-          <p className="mt-1 text-sm text-muted">
+        <div className="mt-3 flex flex-col items-center rounded-xl border border-dashed border-line px-6 py-12 text-center">
+          <SearchX className="size-7 text-ink-2" aria-hidden />
+          <p className="mt-3 font-display text-lg font-medium">Nothing on that pitch</p>
+          <p className="mt-1 text-sm text-ink-2">
             {filtered ? "Try a wider search. Most games go up a day or two ahead." : "No games are posted yet."}
           </p>
           {filtered ? (
-            <Link href="/" className="mt-5 rounded-full bg-chalk px-4 py-2 text-sm font-semibold text-night">
+            <Link href="/" className="mt-5 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper">
               Clear filters
             </Link>
           ) : null}

@@ -40,10 +40,10 @@ function Chip({ to, active, children }: { to: string; active: boolean; children:
       scroll={false}
       aria-pressed={active}
       className={clsx(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border px-3 py-1.5 text-[13px] font-medium transition",
         active
-          ? "border-chalk bg-chalk text-night"
-          : "border-night-line bg-night-raised/70 text-chalk/80 hover:border-chalk/30 hover:text-chalk",
+          ? "border-ink bg-ink text-paper"
+          : "border-line-strong bg-transparent text-ink-2 hover:border-ink hover:text-ink",
       )}
     >
       {children}
@@ -54,7 +54,7 @@ function Chip({ to, active, children }: { to: string; active: boolean; children:
 export function FilterChips({ query }: { query: GameQuery }) {
   return (
     <div className="space-y-2">
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         <Chip to={href({ ...query, borough: undefined })} active={!query.borough}>
           All NYC
         </Chip>
@@ -64,7 +64,7 @@ export function FilterChips({ query }: { query: GameQuery }) {
           </Chip>
         ))}
       </div>
-      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         <Chip to={href({ ...query, when: query.when === "tonight" ? undefined : "tonight" })} active={query.when === "tonight"}>
           Tonight
         </Chip>
