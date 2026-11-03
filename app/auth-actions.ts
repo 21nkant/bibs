@@ -9,7 +9,8 @@ import { STARTING_RATING } from "@/lib/types";
 
 export type AuthState = { error?: string } | undefined;
 
-export const DEMO_ACCOUNTS = {
+// Not exported: a "use server" module may only export async functions.
+const DEMO_ACCOUNTS = {
   alex: "alex@bibs.test",
   sam: "sam@bibs.test",
 } as const;
