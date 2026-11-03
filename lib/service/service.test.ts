@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db, schema } from "@/lib/db";
 import {
+  createGame,
   getGame,
   getMyGames,
   getProfile,
@@ -198,6 +199,23 @@ describe.skipIf(!hasDb)("service (integration)", () => {
     const after = (await getProfile(flaky))!;
     expect(after.lateDrops).toBe(1);
     expect(after.reliability).toBeCloseTo(10 / 11);
+  });
+
+  it("create game: rejects past times and bad ranges, blocks a double-booked field, then posts", async () => {
+    const host = await makeProfile("Test Host", 1200, 10);
+    const when = new Date(Date.now() + 20 * 86_400_000);
+    const base = { title: "[test] Posted", fieldId, startsAt: when, durationMin: 90, capacity: 14, minRating: 1000, maxRating: 1400, access: "open" as const, note: null };
+
+    expect(await createGame(host, { ...base, startsAt: new Date(Date.now() - 60_000) })).toMatchObject({ ok: false, error: "bad_time" });
+    expect(await createGame(host, { ...base, minRating: 1400, maxRating: 1000 })).toMatchObject({ ok: false, error: "bad_range" });
+    expect(await createGame(host, { ...base, fieldId: "no-such-field" })).toMatchObject({ ok: false, error: "unknown_field" });
+
+    const made = await createGame(host, base);
+    expect(made.ok).toBe(true);
+    if (made.ok) gameIds.push(made.gameId);
+    // Same field, overlapping time: refused.
+    const clash = await createGame(host, { ...base, startsAt: new Date(when.getTime() + 30 * 60_000) });
+    expect(clash).toMatchObject({ ok: false, error: "field_taken" });
   });
 
   it("only the organizer can lock; locking balances teams and closes the roster", async () => {

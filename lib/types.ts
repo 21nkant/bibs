@@ -131,3 +131,18 @@ export type SignUpInput = {
   position: Position;
   level: Level;
 };
+
+export type CreateGameInput = {
+  title: string;
+  fieldId: string;
+  startsAt: Date;
+  durationMin: number;
+  capacity: number;
+  minRating: number;
+  maxRating: number;
+  access: FieldAccess;
+  note: string | null;
+};
+export type CreateGameResult =
+  | { ok: true; gameId: string }
+  | { ok: false; error: "no_profile" | "unknown_field" | "bad_time" | "bad_range" | "field_taken"; message: string };

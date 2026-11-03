@@ -11,6 +11,8 @@ import { isLateDrop, reliability } from "@/lib/engine/reliability";
 import {
   TIME_ZONE,
   type Borough,
+  type CreateGameInput,
+  type CreateGameResult,
   type GameDetail,
   type GameFilters,
   type GameStatus,
@@ -609,5 +611,68 @@ export async function submitResult(
       ok: true,
       changes: changes.map((c) => ({ userId: c.id, name: names.get(c.id)!, before: c.before, after: c.after, team: c.team })),
     };
+  });
+}
+
+// ---- Organizing ---------------------------------------------------------------------------
+// Every field, for the create-game picker (368 rows; small enough to send whole).
+export async function listFields() {
+  return db
+    .select({ id: fields.id, park: fields.park, fieldNumber: fields.fieldNumber, borough: fields.borough, lit: fields.lit })
+    .from(fields)
+    .orderBy(asc(fields.borough), asc(fields.park), asc(fields.fieldNumber));
+}
+
+const MIN_LEAD_MS = 60 * 60 * 1000; // a game must start at least an hour from now
+const MAX_AHEAD_MS = 30 * DAY_MS;
+
+export async function createGame(userId: string, input: CreateGameInput): Promise<CreateGameResult> {
+  type CreateError = Extract<CreateGameResult, { ok: false }>["error"];
+  const fail = (error: CreateError, message: string): CreateGameResult => ({ ok: false, error, message });
+  if (!(await getProfile(userId))) return fail("no_profile", "Finish signing up first.");
+
+  const lead = input.startsAt.getTime() - Date.now();
+  if (Number.isNaN(lead) || lead < MIN_LEAD_MS) return fail("bad_time", "Pick a start time at least an hour from now.");
+  if (lead > MAX_AHEAD_MS) return fail("bad_time", "Games can be posted up to 30 days ahead.");
+  if (input.minRating >= input.maxRating) return fail("bad_range", "The lowest rating has to be below the highest.");
+
+  return db.transaction(async (tx) => {
+    // Lock the field row so two organizers can't both claim the same slot.
+    const [field] = await tx.select({ id: fields.id, park: fields.park }).from(fields).where(eq(fields.id, input.fieldId)).for("update");
+    if (!field) return fail("unknown_field", "Pick a field from the list.");
+
+    const end = new Date(input.startsAt.getTime() + input.durationMin * 60_000);
+    const [taken] = await tx
+      .select({ title: games.title, startsAt: games.startsAt })
+      .from(games)
+      .where(
+        and(
+          eq(games.fieldId, input.fieldId),
+          inArray(games.status, ["open", "locked"]),
+          sql`${games.startsAt} < ${ts(end)}`,
+          sql`${gameEnd} > ${ts(input.startsAt)}`,
+        ),
+      )
+      .limit(1);
+    if (taken) {
+      return fail("field_taken", `"${taken.title}" is already on this field at ${whenFmt.format(taken.startsAt)}. Pick another time or field.`);
+    }
+
+    const [row] = await tx
+      .insert(games)
+      .values({
+        fieldId: input.fieldId,
+        organizerId: userId,
+        title: input.title,
+        startsAt: input.startsAt,
+        durationMin: input.durationMin,
+        capacity: input.capacity,
+        minRating: input.minRating,
+        maxRating: input.maxRating,
+        access: input.access,
+        note: input.note,
+      })
+      .returning({ id: games.id });
+    return { ok: true, gameId: row.id };
   });
 }

@@ -1,4 +1,4 @@
-import { SearchX } from "lucide-react";
+import { Plus, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FilterChips, parseGameQuery, type GameQuery } from "@/components/game/filter-chips";
@@ -52,6 +52,16 @@ export default async function GamesPage({ searchParams }: PageProps<"/">) {
       <div className="mt-6">
         <FilterChips query={query} />
       </div>
+
+      <Link
+        href="/games/new"
+        className="mt-5 flex items-center justify-between rounded-[3px] border border-line-strong px-4 py-3 text-[15px] font-medium transition hover:border-ink"
+      >
+        <span className="flex items-center gap-2">
+          <Plus className="size-4 text-accent" aria-hidden /> Post a game
+        </span>
+        <span className="font-mono text-[11px] text-ink-3">368 NYC fields</span>
+      </Link>
 
       <p className="mt-6 eyebrow-plain">
         {games.length === 0
