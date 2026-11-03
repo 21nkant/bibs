@@ -30,12 +30,12 @@ const ODDS = { naive: 0.78, balanced: 0.51 };
 // Left-half formation (x%, y%) on a landscape pitch: keeper, two back, three middle, one up top.
 const GK_SLOT = [6.5, 50] as const;
 const OUT_SLOTS = [
-  [18, 27],
-  [18, 73],
-  [30, 14],
-  [30, 50],
-  [30, 86],
-  [40.5, 50],
+  [17, 24],
+  [17, 76],
+  [29, 12],
+  [29, 50],
+  [29, 88],
+  [42, 50],
 ] as const;
 
 function layout(teamA: Set<string>) {
