@@ -3,10 +3,12 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { WinBar } from "@/components/ui/win-bar";
+import { balanceTeams, winProbability } from "@/lib/engine/balance";
 
 type P = { id: string; ini: string; rating: number; gk?: boolean };
+type Spot = { x: number; y: number; a: boolean };
 
-// Sign-up order: the strong regulars signed up first, so "first seven vs the rest" is lopsided.
+// Tonight's roster in sign-up order: the strong regulars signed up first.
 const PLAYERS: P[] = [
   { id: "mc", ini: "MC", rating: 1395 },
   { id: "km", ini: "KM", rating: 1380, gk: true },
@@ -23,9 +25,7 @@ const PLAYERS: P[] = [
   { id: "hs", ini: "HS", rating: 1060 },
   { id: "mb", ini: "MB", rating: 1045 },
 ];
-const NAIVE_A = new Set(PLAYERS.slice(0, 7).map((p) => p.id));
-const BALANCED_A = new Set(["mc", "lp", "tb", "ar", "ba", "lo", "hs"]);
-const ODDS = { naive: 0.78, balanced: 0.51 };
+const byId = new Map(PLAYERS.map((p) => [p.id, p]));
 
 // Left-half formation (x%, y%) on a landscape pitch: keeper, two back, three middle, one up top.
 const GK_SLOT = [6.5, 50] as const;
@@ -39,32 +39,119 @@ const OUT_SLOTS = [
 ] as const;
 
 function layout(teamA: Set<string>) {
-  const pos = new Map<string, { x: number; y: number; a: boolean }>();
+  const pos = new Map<string, Spot>();
   for (const isA of [true, false]) {
     const team = PLAYERS.filter((p) => teamA.has(p.id) === isA);
     const keeper = team.find((p) => p.gk);
     const outfield = team.filter((p) => p !== keeper);
-    const place = (p: P, [x, y]: readonly [number, number]) =>
-      pos.set(p.id, { x: isA ? x : 100 - x, y, a: isA });
+    const place = (p: P, [x, y]: readonly [number, number]) => pos.set(p.id, { x: isA ? x : 100 - x, y, a: isA });
     if (keeper) place(keeper, GK_SLOT);
     outfield.forEach((p, i) => place(p, OUT_SLOTS[i % OUT_SLOTS.length]));
   }
   return pos;
 }
-const LAYOUTS = { naive: layout(NAIVE_A), balanced: layout(BALANCED_A) };
+
+// ---- The demo runs the real balancer (lib/engine/balance.ts) on this roster. ----------------
+const NAIVE_A = new Set(PLAYERS.slice(0, 7).map((p) => p.id));
+const split = balanceTeams(PLAYERS.map((p) => ({ id: p.id, rating: p.rating, position: p.gk ? "gk" : "outfield" })));
+// Keep the bibs on whichever balanced team shares more players with the sign-up-order bibs.
+const overlap = (ids: string[]) => ids.filter((id) => NAIVE_A.has(id)).length;
+const BALANCED_A = new Set(overlap(split.teamA) >= overlap(split.teamB) ? split.teamA : split.teamB);
+
+// Players who change sides, paired up (keepers together) so each swap is one crossing of the halfway line.
+const keepersFirst = (ps: P[]) => [...ps.filter((p) => p.gk), ...ps.filter((p) => !p.gk)];
+const leaving = keepersFirst(PLAYERS.filter((p) => NAIVE_A.has(p.id) && !BALANCED_A.has(p.id)));
+const joining = keepersFirst(PLAYERS.filter((p) => !NAIVE_A.has(p.id) && BALANCED_A.has(p.id)));
+const SWAPS = leaving.map((p, i) => [p, joining[i]] as const);
+
+// Positions after 0..n swaps: the two players in a swap trade places, everyone else stays put.
+const STATES: Map<string, Spot>[] = [layout(NAIVE_A)];
+for (const [out, inn] of SWAPS) {
+  const next = new Map(STATES.at(-1)!);
+  const a = next.get(out.id)!;
+  const b = next.get(inn.id)!;
+  next.set(out.id, b);
+  next.set(inn.id, a);
+  STATES.push(next);
+}
+const ratingsOn = (s: Map<string, Spot>, a: boolean) =>
+  [...s].filter(([, spot]) => spot.a === a).map(([id]) => byId.get(id)!.rating);
+const PROBS = STATES.map((s) => winProbability(ratingsOn(s, true), ratingsOn(s, false)));
+const avg = (xs: number[]) => Math.round(xs.reduce((t, x) => t + x, 0) / xs.length);
+const FINAL = STATES.at(-1)!;
+const AVG_A = avg(ratingsOn(FINAL, true));
+const AVG_B = avg(ratingsOn(FINAL, false));
+
+// Every way to split 14 players into two 7s, counting mirror images once: C(14,7) / 2 = 1,716.
+const choose = (n: number, k: number): number => (k === 0 ? 1 : (n * choose(n - 1, k - 1)) / k);
+const SPLITS = choose(PLAYERS.length, Math.floor(PLAYERS.length / 2)) / 2;
+
+// Steps: 0 sign-up order · 1 search · 2..n+1 one swap each · n+2 balanced.
+const SEARCH = 1;
+const BALANCED = SWAPS.length + 2;
+const HOLD_MS = (step: number) => (step === 0 ? 2600 : step === SEARCH ? 2000 : step === BALANCED ? 4200 : 800);
+const swapsDone = (step: number) => Math.max(0, Math.min(SWAPS.length, step - 1));
 
 export function ShuffleHero() {
   const reduce = useReducedMotion();
-  const [phase, setPhase] = useState<"naive" | "balanced">("naive");
+  const [step, setStep] = useState(0);
+  const [checked, setChecked] = useState(0);
 
   useEffect(() => {
     if (reduce) return;
-    const t = setTimeout(() => setPhase((p) => (p === "naive" ? "balanced" : "naive")), phase === "naive" ? 2200 : 4600);
+    const t = setTimeout(() => setStep((s) => (s === BALANCED ? 0 : s + 1)), HOLD_MS(step));
     return () => clearTimeout(t);
-  }, [phase, reduce]);
+  }, [step, reduce]);
 
-  const shown = reduce ? "balanced" : phase;
-  const pos = LAYOUTS[shown];
+  // The split counter ticks through every candidate while the "search" step is showing.
+  useEffect(() => {
+    if (step !== SEARCH) return;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - start) / 1500);
+      setChecked(Math.round(SPLITS * (1 - (1 - k) ** 3)));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [step]);
+
+  const shown = reduce ? BALANCED : step;
+  const done = swapsDone(shown);
+  const pos = STATES[done];
+  const current = shown > SEARCH && shown < BALANCED ? SWAPS[done - 1] : null;
+  const moving = new Set(current ? [current[0].id, current[1].id] : []);
+
+  const label =
+    shown === 0 ? "Sign-up order" : shown === BALANCED ? "Balanced" : shown === SEARCH ? "Searching" : "Balancing";
+  const labelTone = shown === 0 ? "text-down" : shown === BALANCED ? "text-up" : "text-on-dark";
+
+  let status: React.ReactNode;
+  if (shown === 0) {
+    status = <span>First 7 to sign up vs the rest</span>;
+  } else if (shown === SEARCH) {
+    status = (
+      <span className="tabular">
+        Checking split {checked.toLocaleString("en-US")} of {SPLITS.toLocaleString("en-US")}
+        <span className={checked > SPLITS * 0.4 ? "text-up" : "opacity-0"}> · ✓ one keeper each side</span>
+      </span>
+    );
+  } else if (current) {
+    status = (
+      <span>
+        Swap {done} of {SWAPS.length}: {current[0].gk ? "GK" : current[0].ini} {current[0].rating} ⇄{" "}
+        {current[1].gk ? "GK" : current[1].ini} {current[1].rating}
+      </span>
+    );
+  } else {
+    status = (
+      <span className="tabular">
+        Team averages {AVG_A.toLocaleString("en-US")} vs {AVG_B.toLocaleString("en-US")}
+        <span className="text-up"> · ✓ closest of {SPLITS.toLocaleString("en-US")}</span>
+      </span>
+    );
+  }
 
   return (
     <figure className="surface-dark relative overflow-hidden rounded-xl border border-line">
@@ -77,69 +164,69 @@ export function ShuffleHero() {
         <span className="ml-2 font-mono text-[11px] tracking-[0.08em] text-ink-3">Tuesday Night 7v7 · lock &amp; balance</span>
       </div>
       <div className="p-4 sm:p-6">
-      <figcaption className="flex items-center justify-between">
-        <div className="relative h-5 flex-1 overflow-hidden">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.span
-              key={shown}
-              initial={{ y: 14, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -14, opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-0 eyebrow-plain"
-            >
-              {shown === "naive" ? (
-                <span className="text-ink-2">Sign-up order</span>
-              ) : (
-                <span className="text-up">Balanced by Bibs</span>
-              )}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-        <span className="font-mono text-[11px] text-ink-3">7v7 · McCarren Park</span>
-      </figcaption>
-
-      <div className="relative mt-3 aspect-[107/70] overflow-hidden rounded-xl border border-ink/15 bg-paper">
-        {/* mowing stripes */}
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-100"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, color-mix(in oklab, var(--color-ink) 3%, transparent) 0 10%, transparent 10% 20%)",
-          }}
-        />
-                <LandscapeLines />
-        {PLAYERS.map((p, i) => {
-          const s = pos.get(p.id)!;
-          return (
-            <motion.div
-              key={p.id}
-              layout
-              layoutId={`hero-${p.id}`}
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-              style={{ left: `${s.x}%`, top: `${s.y}%` }}
-              transition={{ layout: { type: "spring", stiffness: 120, damping: 18, delay: i * 0.035 } }}
-            >
+        <figcaption className="flex items-center justify-between">
+          <div className="relative h-5 flex-1 overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
-                initial={false}
-                animate={{
-                  backgroundColor: s.a ? "var(--color-accent)" : "var(--color-dark-raised)",
-                  color: s.a ? "var(--color-dark)" : "var(--color-on-dark)",
-                  borderColor: s.a ? "var(--color-accent)" : "var(--color-on-dark-2)",
-                }}
-                transition={{ duration: 0.4, delay: i * 0.035 + 0.15 }}
-                className="grid size-7 place-items-center rounded-full border font-mono text-[10px] font-medium sm:size-8"
+                key={label}
+                initial={{ y: 14, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -14, opacity: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className={`absolute inset-0 eyebrow-plain ${labelTone}`}
               >
-                {p.gk ? "GK" : p.ini}
+                {label}
               </motion.span>
-              <span className="mt-0.5 font-mono text-[9px] font-medium text-ink/70 tabular">{p.rating}</span>
-            </motion.div>
-          );
-        })}
-      </div>
+            </AnimatePresence>
+          </div>
+          <span className="font-mono text-[11px] text-ink-3">7v7 · McCarren Park</span>
+        </figcaption>
 
-      <WinBar probA={ODDS[shown]} className="mt-5" />
+        <div className="relative mt-3 aspect-[107/70] overflow-hidden rounded-xl border border-ink/15 bg-paper">
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(90deg, color-mix(in oklab, var(--color-ink) 3%, transparent) 0 10%, transparent 10% 20%)",
+            }}
+          />
+          <LandscapeLines />
+          {PLAYERS.map((p) => {
+            const s = pos.get(p.id)!;
+            const isMoving = moving.has(p.id);
+            return (
+              <motion.div
+                key={p.id}
+                initial={false}
+                animate={{ left: `${s.x}%`, top: `${s.y}%` }}
+                transition={{ type: "spring", stiffness: 110, damping: 17 }}
+                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+                style={{ zIndex: isMoving ? 2 : 1 }}
+              >
+                <motion.span
+                  initial={false}
+                  animate={{
+                    backgroundColor: s.a ? "var(--color-accent)" : "var(--color-dark-raised)",
+                    color: s.a ? "var(--color-dark)" : "var(--color-on-dark)",
+                    borderColor: isMoving ? "var(--color-on-dark)" : s.a ? "var(--color-accent)" : "var(--color-on-dark-2)",
+                    scale: isMoving ? 1.18 : 1,
+                  }}
+                  transition={{ duration: 0.35 }}
+                  className="grid size-7 place-items-center rounded-full border font-mono text-[10px] font-medium sm:size-8"
+                >
+                  {p.gk ? "GK" : p.ini}
+                </motion.span>
+                <span className="mt-0.5 font-mono text-[9px] font-medium text-ink/70 tabular">{p.rating}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <p className="mt-4 h-4 truncate font-mono text-[11px] tracking-[0.04em] text-ink-2" aria-live="polite">
+          {status}
+        </p>
+        <WinBar probA={PROBS[done]} className="mt-3" />
       </div>
     </figure>
   );

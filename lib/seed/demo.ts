@@ -35,7 +35,7 @@ const PLAYERS: P[] = [
   { key: "sofia", name: "Sofia Petrova", position: "gk", level: "advanced", rating: 1440, games: 33 },
   { key: "eli", name: "Eli Turner", position: "outfield", level: "advanced", rating: 1510, games: 45 },
   { key: "yusuf", name: "Yusuf Demir", position: "outfield", level: "advanced", rating: 1480, games: 38 },
-  { key: "grace", name: "Grace Kim", position: "outfield", level: "intermediate", rating: 1190, games: 7 },
+  { key: "grace", name: "Grace Lin", position: "outfield", level: "intermediate", rating: 1190, games: 7 },
   { key: "theo", name: "Theo Grant", position: "gk", level: "beginner", rating: 990, games: 3 },
   { key: "amara", name: "Amara Osei", position: "outfield", level: "beginner", rating: 970, games: 2 },
   { key: "jon", name: "Jon Fischer", position: "outfield", level: "intermediate", rating: 1255, games: 13 },

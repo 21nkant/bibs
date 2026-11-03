@@ -82,9 +82,6 @@ export default async function WelcomePage() {
 
         <Reveal className="mx-auto mt-14 max-w-[760px] text-left sm:mt-20" delay={0.15}>
           <ShuffleHero />
-          <p className="mt-4 text-center font-mono text-[11px] tracking-[0.08em] text-ink-3">
-            Same fourteen players. Bibs balances the teams by rating before kickoff.
-          </p>
         </Reveal>
       </section>
 

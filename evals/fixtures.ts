@@ -31,7 +31,7 @@ const PLAYERS: Record<string, { name: string; position: Position; rating: number
   sofia: { name: "Sofia Petrova", position: "gk", rating: 1440 },
   eli: { name: "Eli Turner", position: "outfield", rating: 1510 },
   yusuf: { name: "Yusuf Demir", position: "outfield", rating: 1480 },
-  grace: { name: "Grace Kim", position: "outfield", rating: 1190 },
+  grace: { name: "Grace Lin", position: "outfield", rating: 1190 },
   theo: { name: "Theo Grant", position: "gk", rating: 990 },
   amara: { name: "Amara Osei", position: "outfield", rating: 970 },
   jon: { name: "Jon Fischer", position: "outfield", rating: 1255 },
