@@ -64,9 +64,12 @@ body {
   background: color-mix(in oklab, var(--color-accent) 25%, transparent);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+/* In the base layer so a component can opt out with outline-none (e.g. the chat composer, whose box shows focus). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
 }
 
 /* Mono eyebrow with the accent hairline tick. */
