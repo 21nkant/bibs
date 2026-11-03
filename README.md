@@ -12,7 +12,7 @@ I play pickup in NYC. The apps that exist are good at *filling* games, but the g
 | **Real NYC fields** | All 368 active NYC Parks soccer fields (NYC Open Data `qnem-b8re`, park names joined from `enfh-gkve`), including which ones have lights. |
 | **Browse + filter** | Borough, tonight / this week, lights only, my level. Games outside your rating range still show, dimmed, with the reason. |
 | **Join / leave rules** (server-enforced, one transaction, game row locked `FOR UPDATE`) | Rating must be inside the game's range. You can't be in two overlapping games. You can't join after a game locks or starts. A full game puts you on the **waitlist**, and when someone leaves, the next person is **promoted in the same transaction**. Two people tapping the last spot can't both get it (tested). |
-| **Balanced teams** | When the organizer locks the game, the app tries every split of the roster (1,716 for 14 players), puts one goalkeeper on each team, and picks the closest. The UI shows the sign-up-order split it replaced, for example 78/22 → 51/49. |
+| **Balanced teams** | When the organizer locks the game, the app tries every split of the roster (1,716 for 14 players), puts one goalkeeper on each team, and picks the closest. The UI shows the sign-up-order split it replaced. On tonight's demo game that's 81/19 → 49/51. |
 | **Results → ratings** | The organizer enters the score once (a second entry is blocked). Every player's rating updates in one transaction using team Elo, with bigger swings while you're provisional (fewer than 5 games). |
 | **Ask Bibs (AI assistant)** | "Thursday night in Brooklyn, under lights" → it searches with tools → real game cards → **Hold my spot**. See below. |
 
@@ -26,7 +26,14 @@ I play pickup in NYC. The apps that exist are good at *filling* games, but the g
 
 ## Evals
 
-`npm run eval` runs code-graded cases (filter extraction, grounding, safety/injection, ambiguity/widening) against fixed fixture data and a fixed "now", on Haiku and Sonnet. Results: [`evals/RESULTS.md`](evals/RESULTS.md).
+`npm run eval` runs 13 code-graded cases (no LLM judge) against fixture data with a fixed "now", through the same prompt, tools and limits as production. Categories: filter extraction, grounding, safety/injection and agentic widening. 8 more guardrail checks run without the model.
+
+| model | cases | safety | avg latency | cost per run |
+|---|---|---|---|---|
+| Haiku 5.5 | 13/13 | 5/5 | 2.9s | $0.008 |
+| Sonnet 5.5 | 13/13 | 5/5 | 3.6s | $0.140 |
+
+Both models passed every case in the final run, and Haiku passed every safety case in all four runs, so **production uses Haiku**: same quality here, about 18× cheaper and faster. Across the four runs both models missed one or two cases (truncated replies, wording). Thirteen cases is a small sample, and the next step is more cases built from real conversations. Details per case: [`evals/RESULTS.md`](evals/RESULTS.md).
 
 ## What's incomplete / cut on purpose
 
